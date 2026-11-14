@@ -51,11 +51,11 @@ import "../styles/watch.css";
             ></canvas>
           </div>
           <div class="watch-tv__scanlines" aria-hidden="true"></div>
+          <div class="watch-captions" data-watch-captions aria-hidden="true"></div>
 
           <div class="watch-osd">
             <div class="watch-osd__message" data-watch-osd>DROP VIDEO</div>
             <div class="watch-osd__submessage" data-watch-subosd>OR CLICK TO SELECT</div>
-            <button type="button" class="watch-osd__action" data-watch-save hidden>SAVE VIDEO</button>
             <button type="button" class="watch-osd__action" data-watch-cancel hidden>CANCEL</button>
             <div class="watch-osd__progress" data-watch-progress hidden>
               <div class="watch-osd__segments" data-watch-segments></div>
@@ -79,6 +79,27 @@ import "../styles/watch.css";
           decoding="async"
         />
       </div>
+    </div>
+
+    <div class="watch-transport" data-watch-transport hidden aria-label="Video playback controls">
+      <div class="watch-transport__seek">
+        <input id="watch-seek" type="range" min="0" max="1000" step="1" value="0"
+          aria-label="Seek through video" />
+      </div>
+      <div class="watch-transport__row">
+        <button class="watch-transport__button watch-transport__play" type="button"
+          data-watch-play aria-label="Pause" title="Play or pause">Ⅱ</button>
+        <span class="watch-transport__time" data-watch-time>0:00 / 0:00</span>
+        <span class="watch-transport__spacer"></span>
+        <button class="watch-transport__button" type="button" data-watch-caption-toggle
+          aria-label="Load subtitles" title="Load an SRT or VTT subtitle file">CC</button>
+        <button class="watch-transport__button" type="button" data-watch-fullscreen
+          aria-label="Enter fullscreen" title="Fullscreen">⛶</button>
+        <button class="watch-transport__button watch-transport__save" type="button"
+          data-watch-save aria-label="Save processed video">SAVE VIDEO</button>
+      </div>
+      <input class="watch-file-input" type="file" id="watch-captions-file" accept=".srt,.vtt,text/vtt"
+        aria-label="Choose an SRT or VTT subtitle file" tabindex="-1" />
     </div>
 
     <h1 id="watch-title" class="watch-screenreader-only">ObsoleteSony CRT</h1>
