@@ -402,7 +402,15 @@ main.watch-main {
 .watch-transport__volume:disabled { opacity: .3; cursor: default; }
 .watch-transport__spacer { flex: 1; }
 .watch-transport__button[aria-pressed="true"] { color: var(--watch-control-accent); }
-.watch-transport__save { font-size: 11px; letter-spacing: .055em; white-space: nowrap; }
+.watch-transport__save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 6px;
+}
+.watch-transport__save .watch-transport__icon { width: 20px; height: 20px; }
 .watch-captions {
   position: absolute;
   z-index: 4;
@@ -438,7 +446,7 @@ main.watch-main {
   .watch-transport__mute { font-size: 10px; min-width: 28px; }
   .watch-transport__button { padding: 3px 1px; }
   .watch-transport__time { font-size: 10px; }
-  .watch-transport__save { font-size: 10px; }
+  .watch-transport__save { min-width: 34px; min-height: 34px; padding: 5px; }
   .watch-captions { font-size: clamp(10px, 2.5cqi, 16px); }
 }
 
