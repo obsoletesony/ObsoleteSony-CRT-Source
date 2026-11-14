@@ -19,6 +19,8 @@ if(page) {
   const captionsButton=element<HTMLButtonElement>('[data-watch-caption-toggle]');
   const captionsFile=element<HTMLInputElement>('#watch-captions-file');
   const fullscreen=element<HTMLButtonElement>('[data-watch-fullscreen]');
+  const mute=element<HTMLButtonElement>('[data-watch-mute]');
+  const volume=element<HTMLInputElement>('[data-watch-volume]');
   let session:CRTSession|null=null, runtime:CRTRuntime|null=null;
   let generation=0, loadController:AbortController|null=null;
   let state:State='off', beforeDrag:State='idle', depth=0;
@@ -26,6 +28,7 @@ if(page) {
   let subtitleCues:WatchCue[]=[];
   let subtitlesEnabled=false;
   let scrubbing=false;
+  let lastAudibleVolume=1;
   let seekGeneration=0;
   let download:{url:string;remove:()=>Promise<void>;timer:number}|null=null;
   const uiAbort=new AbortController();
@@ -39,6 +42,12 @@ if(page) {
   function updateCaptions(time:number) {
     captions.textContent=subtitlesEnabled?captionAt(subtitleCues,time):'';
   }
+  function syncVolume() {
+    const current=session?.player.volume??0;
+    volume.value=String(Math.round(current*100));
+    mute.textContent=current>0?'VOL':'MUTE';
+    mute.setAttribute('aria-label',current>0?'Mute audio':'Unmute audio');
+  }
   function updateTransport() {
     const current=session;
     if(!current)return;
@@ -51,6 +60,7 @@ if(page) {
     }
     playButton.textContent=current.state==='playing'?'Ⅱ':'▶';
     playButton.setAttribute('aria-label',current.state==='playing'?'Pause':'Play');
+    syncVolume();
   }
   function syncCaptionButton() {
     captionsButton.setAttribute('aria-pressed',String(subtitlesEnabled&&subtitleCues.length>0));
@@ -68,6 +78,8 @@ if(page) {
     playButton.disabled=!session || next==='exporting';
     captionsButton.disabled=!session || next==='exporting';
     fullscreen.disabled=!session || next==='exporting';
+    mute.disabled=!session || !session.metadata.hasAudio || next==='exporting';
+    volume.disabled=!session || !session.metadata.hasAudio || next==='exporting';
     save.disabled=!session || next==='exporting';
     if(['loading','error','idle','off'].includes(next)) captions.textContent='';
     cancel.hidden=!['exporting','loading'].includes(next);cancel.disabled=false;
@@ -223,6 +235,20 @@ if(page) {
       subtitleCues=parsed;subtitlesEnabled=true;syncCaptionButton();updateTransport();
       statusText('Loaded '+subtitleCues.length+' subtitle cues from '+file.name+'. Captions are preview-only, not included in the exported MP4.');
     })().catch(error=>statusText('Could not load subtitles: '+String(error)));
+  });
+  volume.addEventListener('input',()=>{
+    if(!session||!session.metadata.hasAudio)return;
+    const value=Math.max(0,Math.min(1,Number(volume.value)/100));
+    session.player.volume=value;
+    if(value>0)lastAudibleVolume=value;
+    syncVolume();
+  });
+  mute.addEventListener('click',()=>{
+    if(!session||!session.metadata.hasAudio)return;
+    const current=session.player.volume;
+    if(current>0){lastAudibleVolume=current;session.player.volume=0;}
+    else session.player.volume=lastAudibleVolume;
+    syncVolume();
   });
   fullscreen.addEventListener('click',()=>{
     void (document.fullscreenElement?document.exitFullscreen():page!.requestFullscreen())
