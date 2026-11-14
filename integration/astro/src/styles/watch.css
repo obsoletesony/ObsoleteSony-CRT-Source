@@ -473,3 +473,27 @@ main.watch-main {
 @media (max-width: 480px) {
   .watch-transport { margin-top: var(--space-5, 22px); }
 }
+
+/* Keep paused frames clean for screenshots; the control bar shows playback state. */
+.watch-page[data-state="paused"] .watch-osd { opacity: 0; }
+
+/* Embedded track selection is visible only when a supported caption track exists. */
+.watch-transport__captions-select {
+  max-width: 132px;
+  min-width: 0;
+  padding: 4px 18px 4px 6px;
+  color: var(--watch-control-accent);
+  border: 1px solid color-mix(in srgb, var(--watch-control-accent) 35%, transparent);
+  border-radius: 4px;
+  background: #131617;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.watch-transport__captions-select:focus-visible {
+  outline: 1px solid var(--watch-control-accent);
+  outline-offset: 2px;
+}
+@media (max-width: 650px) {
+  .watch-transport__captions-select { max-width: 80px; font-size: 10px; }
+}
