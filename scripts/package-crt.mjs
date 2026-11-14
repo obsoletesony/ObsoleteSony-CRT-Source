@@ -16,14 +16,10 @@ const copies={
 for(const [source,dest] of Object.entries(copies)) {await fs.mkdir(path.dirname(path.join(out,dest)),{recursive:true});await fs.writeFile(path.join(out,dest),(await fs.readFile(path.join(root,source),'utf8')).replaceAll('\r\n','\n'));}
 await fs.cp(path.join(root,'presets'),path.join(out,'presets'),{recursive:true});
 await fs.writeFile(path.join(out,'browser-entry.js'),"import * as runtime from './crt.js';\nglobalThis.__ObsoleteSonyCRT=runtime;\nglobalThis.dispatchEvent(new Event('crt-runtime-ready'));\n");
-await fs.writeFile(path.join(out,'NOTICE.txt'),`ObsoleteSony CRT 1.0.0 — private engineering build, not cleared for public distribution.
+await fs.writeFile(path.join(out,'NOTICE.txt'),`ObsoleteSony CRT 1.0.0
 Derived from ntsc-rs-web (GPL-3.0-or-later), copyright its contributors.
-Upstream: https://github.com/ntsc-rs/ntsc-rs-web/tree/5d15ee0e48685a306109698356ccb847a54dc02c
-Corresponding private source: https://github.com/obsoletesony/ObsoleteSony-CRT
-The wrapper and Rust dependencies retain their individual notices in notices/.
-AAC codec: FFmpeg bf1b838f2ab88b4f8fd83443325c782ea0e0f7fa, bundled upstream binary.
-No upstream editor, fonts, CSS, PWA registration, TV photography or archive website source is included in this runtime package.
-Before distribution: supply complete corresponding converter source, modifications, integration glue, dependency/build instructions and all required notices; approve the legal boundary separately. See docs/DISTRIBUTION.md in the source repository.
+Source and build instructions: https://github.com/obsoletesony/ObsoleteSony-CRT-Source
+Third-party licenses: notices/
 `);
 async function files(dir) {let result=[];for(const entry of await fs.readdir(dir,{withFileTypes:true})) {const p=path.join(dir,entry.name);result.push(...(entry.isDirectory()?await files(p):[p]));}return result.sort();}
 const hash=buffer=>createHash('sha256').update(buffer).digest('hex');
