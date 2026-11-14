@@ -1,0 +1,9 @@
+* text=auto eol=lf
+*.wasm binary
+*.png binary
+*.woff2 binary
+*.mp4 binary
+package/** -text
+# Preserve upstream patch context exactly; trailing-space context is significant.
+*.patch -whitespace
+aac-codec/avcodec.js -whitespace

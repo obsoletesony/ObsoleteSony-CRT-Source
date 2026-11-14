@@ -1,0 +1,230 @@
+.preset-manager {
+    border-top: 1px solid var(--divider);
+    display: flex;
+    flex-direction: column;
+}
+
+// For mobile, don't make it resizable
+.full-height-panel {
+    border-top: 1px solid var(--divider);
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-header {
+    composes: button-reset from 'valadaptive-lib/css/shared.module.css';
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0 var(--pane-padding);
+    height: 2.5rem;
+    cursor: pointer;
+    transition: background-color var(--fade);
+
+    &:hover {
+        background-color: var(--toggle-hover);
+    }
+}
+
+.header-title {
+    font-weight: 600;
+}
+
+.panel-body {
+    // ResizablePanel sets the height; we use flexbox to distribute space
+    display: flex;
+    flex-direction: column;
+}
+
+.settings-section {
+    padding: 0.5rem var(--pane-padding);
+    border-bottom: 1px solid var(--divider);
+    display: flex;
+    flex: 0 0 auto;
+
+    &.open {
+        border-bottom: none;
+    }
+}
+
+.divider {
+    align-self: stretch;
+    flex: 0 0 1px;
+    margin: 0 0.5rem;
+    background-color: var(--divider);
+}
+
+.current-settings-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-left: auto;
+}
+
+.library-section {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.library-toolbar {
+    display: flex;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+}
+
+.library-inner {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    padding: 0 var(--pane-padding) 0.5rem;
+}
+
+.preset-list {
+    transition: background-color var(--fade), border-color var(--fade);
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border: 1px solid var(--divider);
+    border-radius: var(--corner-radius);
+    background: var(--base-color-tertiary);
+    display: flex;
+    flex-direction: column;
+
+    &.drop-target {
+        border-color: var(--primary-light);
+        background: var(--primary-muted);
+    }
+}
+
+.loading-entry {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.entry-header {
+    height: max(1.75rem, 28px);
+    display: flex;
+    cursor: pointer;
+    padding: 0 0.5rem;
+    transition: background-color var(--fade), opacity var(--fade);
+
+    &:hover {
+        background-color: var(--toggle-hover);
+    }
+
+    &.selected {
+        background-color: var(--toggle-active);
+    }
+
+    &.loading {
+        opacity: 0.6;
+    }
+
+    &.dragging {
+        opacity: 0.5;
+    }
+
+    &.drop-target {
+        background-color: var(--primary-muted);
+        outline: 2px dashed var(--primary-light);
+        outline-offset: -2px;
+    }
+
+    &.entry-placeholder {
+        align-items: center;
+        gap: 0.5rem;
+        cursor: default;
+
+        &:hover, &.selected {
+            background: none;
+        }
+    }
+
+    &.entry-error {
+        color: var(--red);
+    }
+}
+
+.collapse-icon {
+    align-self: center;
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    flex-direction: column;
+    width: 24px;
+}
+
+.entry-info {
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    overflow: auto;
+}
+
+.entry-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.indent {
+    width: 24px;
+    flex: 0 0 auto;
+    align-self: stretch;
+    display: flex;
+    justify-content: center;
+
+    &::after {
+        content: '';
+        border-left: 1px solid var(--divider);
+    }
+}
+
+.rename-input {
+    flex: 1 1 0;
+    min-width: 0;
+    max-height: calc(100% - 4px);
+    overflow: visible;
+}
+
+.empty-state {
+    color: var(--text-detail);
+    text-align: center;
+}
+
+.empty-state,
+.loading-state {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    font-size: 0.9rem;
+}
+
+.empty-state > header, .error-state > header {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+}
+
+.error-message {
+    font-size: 0.85rem;
+}

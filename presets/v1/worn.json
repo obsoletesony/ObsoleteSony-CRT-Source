@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "composite_noise_intensity": 0.1,
+  "chroma_noise_intensity": 0.18,
+  "chroma_phase_noise_intensity": 0.008,
+  "vhs_edge_wave": 2.5,
+  "tracking_noise_wave_intensity": 8
+}

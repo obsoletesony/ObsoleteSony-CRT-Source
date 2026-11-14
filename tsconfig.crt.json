@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "target": "es2022", "module": "ESNext", "moduleResolution": "bundler",
+    "noEmit": true, "strict": true, "skipLibCheck": true, "resolveJsonModule": true,
+    "allowJs": true, "checkJs": false,
+    "types": ["@types/wicg-file-system-access", "vite/client"]
+  },
+  "include": ["src/crt/**/*.ts", "src/global.d.ts"]
+}

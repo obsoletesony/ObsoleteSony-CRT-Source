@@ -1,0 +1,158 @@
+{
+  "name": "@obsoletesony/crt",
+  "version": "1.0.0",
+  "upstream": "5d15ee0e48685a306109698356ccb847a54dc02c",
+  "core": "8cfc51014092a6dc1da5eb0217bb9ae6516b124e",
+  "submodules": {
+    "valadaptive-lib": "8e6a36a0bc116d54a53703e2914d545a34dc3921",
+    "aac-codec/FFmpeg": "bf1b838f2ab88b4f8fd83443325c782ea0e0f7fa"
+  },
+  "toolchain": {
+    "node": "v24.14.0",
+    "rust": "nightly-2026-09-05",
+    "wasm-bindgen": "0.2.129",
+    "wasm-opt": "126",
+    "cargo-about": "0.8.4"
+  },
+  "output": {
+    "width": 640,
+    "height": 480,
+    "pixelAspectRatio": "1:1",
+    "video": "H.264",
+    "audio": "source AAC/MP3 passthrough or AAC reencode"
+  },
+  "sourceHashes": {
+    "src/crt/crop.ts": "e532099dd781310ef7f109ce89e464f9cc89f79de6ec1ba8a1d812dfc1a71e55",
+    "src/crt/frame-index.ts": "5197fddc4f41d5795a4b318b41d71c20fd4eb146c7cca55744a5a499f2c3f38d",
+    "src/crt/index.ts": "134e44430777677da7c045cd3eb4a97ffd7c485a65f90abbb45a06e5df5e7ba6",
+    "src/crt/profiles.ts": "f97cbaf5838b8404038cc7ab7cc7c0164bf3b2413d0f58b6dafe6151012238a9",
+    "src/crt/upstream/aac-codec.ts": "ee076fe2492c86b05cabe42b4efc1563462a434552fc39a6e2b6ca9da91fc233",
+    "src/crt/upstream/effect-worker-pool.ts": "4d0851cae7f1d150272a9fcca5d6140a7f204b0277af9a8cf52e988cf3232922",
+    "src/crt/upstream/effect-worker.worker.ts": "aa539c82c7789560f968acdd10f680f41dc0651d195f31c81e211e7b73951645",
+    "src/crt/upstream/encode-png.ts": "2d9a28d54176318dbec50171ea4ef79ba6f4c7f529c0c1d92f1dac15c1338175",
+    "src/crt/upstream/media-player.ts": "c2d73da2d319799c8af9100c3a7755e73c6040cc717b03bc127cbea1d38e1c6c",
+    "src/crt/upstream/ntsc-rs-module.ts": "1fee5042efbe3770a4506894e62130c07de5029b8243677f8ab495c9561c6699",
+    "src/crt/upstream/render-job.ts": "ab92f8e0bf1018653db63c1683cbb64c0cd83711229f057ab9609d0b5e40be98",
+    "src/crt/upstream/still-image-media.ts": "b744a8f524ca8882bd7cbc9dc3eb9b8cf8c26eff33e1ce09155544e2f9e2229a",
+    "src/crt/upstream/worker-rpc.ts": "2c95da5bdda8ec41e1c5f7a4a415ac372cab67673d071fc2025f22c1edba4e5d",
+    "presets/v1/catalog.json": "b36635d99caef801f52ff2084d197b1aa1176be9424df0f5b68974a9a48e737a",
+    "presets/v1/descriptors.json": "b319056a3ca3efc593ce515bdfba540d894058743de9f452986a8bb559318c4d",
+    "presets/v1/provenance.json": "9f310c16f536507da1da2080dcd8a7a2aab40cf5b38108366e69ccc23931655a",
+    "presets/v1/registry.json": "9bf96112755c3036133c02ac2c751419539b897b4ea6e3bdb10c0b25f189aea6",
+    "presets/v1/tracking.json": "b9b9a35b036b875d8203579d149ce7aa4c4bbcc1edd324d0a03f13ee15958073",
+    "presets/v1/upstream-default.json": "5a1145a6e12f3e53e37567ced75ba29b395c700c901ee6739c5246a1477000dc",
+    "presets/v1/worn.json": "896b5310d99a1ba6b50a55c0a2698591eb316657fc6d4562ae49e7e93dee5535",
+    "package-lock.json": "56a577ca93a960dd522d605978b5f2e66554155c0ca3ee055a5c158bb4b3b65f",
+    "ntsc-rs-web-wrapper/Cargo.lock": "fa5fbe2bffaf7f7d9518d350c8fffedc0916e4c8c3b38e1ee2607f2282d9f9b5",
+    "ntsc-rs-web-wrapper/build.sh": "0e840a6a0706e6fe09ae8dbdb5146a480415a9f29524a77f17dc5057d369000f",
+    "vite.crt.config.ts": "9563ce3a82b32d97a988b58e3e864523e20645db865f613600a23131a0b9ae75",
+    "scripts/generate-profiles.mjs": "d4dbc3b60d3c2c0dbc49d41ac73c5b2378842bf4c6745d61385de54c486ea0b2",
+    "scripts/package-crt.mjs": "170412923c1fd7da527e9bb4b2e7e5ca311bd07baa159c186981016397c96c3c"
+  },
+  "artifacts": {
+    "NOTICE.txt": {
+      "bytes": 878,
+      "sha256": "2c3d3abafcd71fc22f3768194bb6ed7acdaceab843ab2506361d4aae2bd2f1cd"
+    },
+    "assets/avcodec-DG65c9u6.wasm": {
+      "bytes": 225679,
+      "sha256": "4d45cc711452cd4492657d740216f5219249fe93a2386d39d8099a785a718bdf"
+    },
+    "assets/effect-worker.worker-ePt3quB6.js": {
+      "bytes": 12852,
+      "sha256": "5517db4b7d41ec04715f18784a0b558a26ca97b490fe282fe4dd9608f3cafc4f"
+    },
+    "assets/effect-worker.worker-ePt3quB6.js.map": {
+      "bytes": 62167,
+      "sha256": "77f5eb476919397a38bfb57899ac8446111751e486c141db59cd0322aa4b6db3"
+    },
+    "assets/ntsc_rs_web_wrapper_bg-1LMQCCxi.wasm": {
+      "bytes": 259220,
+      "sha256": "6040c0881657325d3b3505656897491be54986ed19ed4790d85a9ff3ad9b3b8c"
+    },
+    "assets/ntsc_rs_web_wrapper_relaxed_bg-BN41nWEc.wasm": {
+      "bytes": 275028,
+      "sha256": "6a7f0b6e95b04e34f6b9036c38df41371f490301885c12d7150851aee4a905f6"
+    },
+    "browser-entry.js": {
+      "bytes": 133,
+      "sha256": "3d63d33235a4a62fa96d43db51d4694e7821d715431852f072168180a0240386"
+    },
+    "crt.js": {
+      "bytes": 589279,
+      "sha256": "dcc04bb2f9bdebbc12b64f484ab0d00e4605846fb9fd7027b191d8853683d902"
+    },
+    "crt.js.map": {
+      "bytes": 2526845,
+      "sha256": "7064e575d910981883436859cd42621a08a3a464288a011c88db2d13734be6f9"
+    },
+    "notices/FFmpeg-LGPL-2.1.txt": {
+      "bytes": 26517,
+      "sha256": "246041b6ecf9bc32d718a62c57877c78b5eb397b6467e74ed7ae2626ab189c30"
+    },
+    "notices/FFmpeg-LGPL-3.0.txt": {
+      "bytes": 7651,
+      "sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768"
+    },
+    "notices/FFmpeg-configure.sh": {
+      "bytes": 1440,
+      "sha256": "6751a1f77cda6666d4077cebde0d9708190f433e5be2af9f6ecec9772075cf39"
+    },
+    "notices/npm.json": {
+      "bytes": 28905,
+      "sha256": "50df9eaa34054edce1b03bd43bc8d3115809b5488ad0aa675893b6ddd5bbcdea"
+    },
+    "notices/ntsc-rs-web-GPL-3.0.txt": {
+      "bytes": 32423,
+      "sha256": "d1bfc7a749950924bd5d27dee610ac8933f96badc14a774be796e986b9dcd3aa"
+    },
+    "notices/rust.json": {
+      "bytes": 427791,
+      "sha256": "fe7af7a17f8c692fa31652b8d411e6754f97c8855fefbb5f58525e42721fc653"
+    },
+    "notices/valadaptive-lib-CC0.txt": {
+      "bytes": 7048,
+      "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+    },
+    "notices/wrapper-Apache-2.0.txt": {
+      "bytes": 10850,
+      "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+    },
+    "notices/wrapper-MIT.txt": {
+      "bytes": 1055,
+      "sha256": "aa891b78858ac4495f00091fd82fec295e17e2a32de8cae71c5f1b7d19c4d6be"
+    },
+    "presets/v1/catalog.json": {
+      "bytes": 2495,
+      "sha256": "b36635d99caef801f52ff2084d197b1aa1176be9424df0f5b68974a9a48e737a"
+    },
+    "presets/v1/descriptors.json": {
+      "bytes": 23375,
+      "sha256": "b319056a3ca3efc593ce515bdfba540d894058743de9f452986a8bb559318c4d"
+    },
+    "presets/v1/provenance.json": {
+      "bytes": 524,
+      "sha256": "9f310c16f536507da1da2080dcd8a7a2aab40cf5b38108366e69ccc23931655a"
+    },
+    "presets/v1/registry.json": {
+      "bytes": 304,
+      "sha256": "9bf96112755c3036133c02ac2c751419539b897b4ea6e3bdb10c0b25f189aea6"
+    },
+    "presets/v1/tracking.json": {
+      "bytes": 292,
+      "sha256": "b9b9a35b036b875d8203579d149ce7aa4c4bbcc1edd324d0a03f13ee15958073"
+    },
+    "presets/v1/upstream-default.json": {
+      "bytes": 1801,
+      "sha256": "5a1145a6e12f3e53e37567ced75ba29b395c700c901ee6739c5246a1477000dc"
+    },
+    "presets/v1/worn.json": {
+      "bytes": 192,
+      "sha256": "896b5310d99a1ba6b50a55c0a2698591eb316657fc6d4562ae49e7e93dee5535"
+    },
+    "setting-descriptors.ts.txt": {
+      "bytes": 31121,
+      "sha256": "22cf925a78dba16d15aaa962e8663388bb68945a4177c8f148de5be8c6515ccd"
+    }
+  }
+}

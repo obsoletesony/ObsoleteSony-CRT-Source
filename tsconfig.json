@@ -1,0 +1,22 @@
+{
+	"compilerOptions": {
+		"target": "esnext",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"noEmit": true,
+		"allowJs": true,
+		"checkJs": true,
+		"strict": true,
+
+		/* Preact Config */
+		"jsx": "react-jsx",
+		"jsxImportSource": "preact",
+		"skipLibCheck": true,
+		"paths": {
+			"react": ["./node_modules/preact/compat/"],
+			"react-dom": ["./node_modules/preact/compat/"]
+		},
+		"types": ["@types/wicg-file-system-access", "vite-plugin-pwa/preact"]
+	},
+	"include": ["node_modules/vite/client.d.ts", "src/global.d.ts", "**/*"]
+}

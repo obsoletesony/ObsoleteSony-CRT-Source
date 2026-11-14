@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "upstream": "5d15ee0e48685a306109698356ccb847a54dc02c",
+  "activeStable": "upstream-default",
+  "activeWorn": "worn",
+  "activeTracking": "tracking",
+  "profiles": {
+    "upstream-default": "upstream-default.json",
+    "worn": "worn.json",
+    "tracking": "tracking.json"
+  }
+}

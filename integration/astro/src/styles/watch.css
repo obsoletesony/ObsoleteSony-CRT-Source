@@ -1,0 +1,333 @@
+/* ObsoleteSony CRT: the television is the hero, not a product card. */
+
+/* Keep the shared header/footer, but cancel the archive header's reserved
+   placeholder and generic page gutter so /watch matches the 32px hero inset
+   used on PSPMAN and PSVITAMAN. */
+main.watch-main {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  margin: calc(0px - var(--header-height, 44px)) 0 0;
+}
+
+@media (max-width: 900px) {
+  main.watch-main {
+    margin-top: calc(0px - var(--header-height-mobile, 48px));
+  }
+}
+
+.watch-page {
+  --watch-bg: #080b0b;
+  --watch-text: #f4f4f4;
+  --watch-green: #a1e9bb;
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--watch-text);
+  background: radial-gradient(ellipse 70% 52% at 50% 43%, #172021 0%, #0c1112 55%, var(--watch-bg) 100%);
+  padding: 0 16px 40px;
+}
+
+.watch-stage {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  /* Match the 32px top spacing used by PSPMAN and PSVITAMAN hero sections. */
+  padding: 32px 0 0;
+}
+
+/* At 2047×1901 the cabinet is nearly square. Height should be the limiting
+   dimension on desktop; width should be the limiting dimension on mobile.
+   No generic site container max-width is applied to this TV. */
+.watch-tv {
+  position: relative;
+  flex: none;
+  /* Exact 80% of the previous responsive television size. */
+  width: min(80%, calc((100dvh - 120px) * 0.86144));
+  aspect-ratio: 2047 / 1901;
+  container-type: inline-size;
+  filter: drop-shadow(0 18px 25px rgba(0, 0, 0, .50));
+  user-select: none;
+}
+
+.watch-tv__cabinet {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: fill;
+  pointer-events: none;
+}
+
+/* Calibrated to the supplied front-facing transparent PNG, not an arbitrary
+   16:9 screen. The physical bezel masks the slight corner curvature. */
+.watch-tv__screen,
+.watch-tv__glass {
+  position: absolute;
+  left: 7.66%;
+  top: 8.30%;
+  width: 84.74%;
+  height: 67.04%;
+}
+
+.watch-tv__glass {
+  z-index: 1;
+  display: block;
+  object-fit: fill;
+  max-width: none;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 260ms ease;
+}
+
+.watch-tv__screen {
+  z-index: 2;
+  overflow: hidden;
+  background: transparent;
+  transform: translateZ(0);
+  isolation: isolate;
+}
+
+.watch-tv__video,
+.watch-tv__static,
+.watch-tv__scanlines,
+.watch-tv__power-flash {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.watch-tv__static,
+.watch-tv__picture {
+  z-index: 1;
+  display: block;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.watch-tv__picture {
+  /* 4:3 is the VIDEO crop boundary, regardless of the file's own ratio.
+     The real aperture is slightly wider; the bezel clips the ~1% overscan. */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+  background: #050606;
+}
+
+.watch-tv__static {
+  object-fit: cover;
+  image-rendering: auto;
+  filter: contrast(1.65) brightness(.68);
+}
+
+.watch-tv__video {
+  display: block;
+  background: #050606;
+  object-fit: cover;
+  object-position: center center;
+}
+
+.watch-tv__scanlines {
+  z-index: 2;
+  opacity: .27;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 0, 0, .26) 3px,
+    transparent 4px
+  );
+  mix-blend-mode: multiply;
+}
+
+.watch-tv__power-flash {
+  z-index: 3;
+  opacity: 0;
+  transform-origin: center;
+  background: linear-gradient(180deg, transparent 43%, rgba(197, 255, 226, .82) 49%, white 50%, rgba(197, 255, 226, .55) 51%, transparent 57%);
+}
+
+.watch-osd {
+  position: absolute;
+  z-index: 6;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .5em;
+  color: var(--watch-green);
+  text-align: center;
+  text-shadow: 0 0 .09em rgba(173, 255, 198, .65), 0 0 .4em rgba(108, 230, 151, .2);
+  font-family: "Lucida Console", "Courier New", monospace;
+  font-size: clamp(10px, 2.5cqi, 31px);
+  line-height: 1.24;
+  letter-spacing: .055em;
+  pointer-events: none;
+  transition: opacity 140ms linear;
+}
+
+.watch-osd__message {
+  padding: 0 .4em;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.watch-osd__submessage {
+  font-size: .48em;
+  letter-spacing: .08em;
+  opacity: .86;
+}
+
+.watch-osd__progress {
+  margin-top: .2em;
+}
+
+.watch-osd__segments {
+  display: flex;
+  align-items: center;
+  gap: .11em;
+}
+
+.watch-osd__segments span {
+  width: .26em;
+  height: 1.05em;
+  border: 1px solid currentColor;
+  opacity: .28;
+}
+
+.watch-osd__segments span.is-lit {
+  opacity: .95;
+  background: currentColor;
+}
+
+.watch-tv__screen-action {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  appearance: none;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.watch-tv__screen-action:focus-visible {
+  outline: 3px solid var(--watch-green);
+  outline-offset: -7px;
+}
+
+.watch-page[data-state="off"] .watch-tv__screen {
+  background: transparent;
+}
+
+.watch-page[data-state="idle"] .watch-tv__static,
+.watch-page[data-state="drag-over"] .watch-tv__static,
+.watch-page[data-state="loading"] .watch-tv__static,
+.watch-page[data-state="error"] .watch-tv__static {
+  opacity: 1;
+}
+
+.watch-page[data-state="playing"] .watch-tv__picture,
+.watch-page[data-state="paused"] .watch-tv__picture,
+.watch-page[data-state="ended"] .watch-tv__picture,
+.watch-page[data-state="exporting"] .watch-tv__picture,
+.watch-page[data-state="complete"] .watch-tv__picture {
+  opacity: 1;
+}
+
+.watch-page[data-state="idle"] .watch-tv__glass,
+.watch-page[data-state="drag-over"] .watch-tv__glass,
+.watch-page[data-state="loading"] .watch-tv__glass,
+.watch-page[data-state="error"] .watch-tv__glass,
+.watch-page[data-state="playing"] .watch-tv__glass,
+.watch-page[data-state="paused"] .watch-tv__glass,
+.watch-page[data-state="ended"] .watch-tv__glass,
+.watch-page[data-state="exporting"] .watch-tv__glass,
+.watch-page[data-state="complete"] .watch-tv__glass {
+  opacity: 0;
+}
+
+.watch-page[data-state="playing"] .watch-osd,
+.watch-page[data-state="off"] .watch-osd {
+  opacity: 0;
+}
+
+.watch-page[data-state="idle"] .watch-tv__power-flash {
+  animation: watch-screen-on .55s ease-out both;
+}
+
+.watch-page[data-state="drag-over"] .watch-tv__screen {
+  box-shadow: inset 0 0 40px rgba(128, 241, 163, .18);
+}
+
+.watch-page[data-state="drag-over"] .watch-osd {
+  color: #c4ffd0;
+}
+
+@keyframes watch-screen-on {
+  0% { opacity: 0; transform: scaleY(.025); }
+  30% { opacity: .85; transform: scaleY(.03); }
+  75% { opacity: .35; transform: scaleY(1); }
+  100% { opacity: 0; transform: scaleY(1); }
+}
+
+.watch-screenreader-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.watch-file-input { display: none !important; }
+
+.watch-page [hidden] { display: none !important; }
+
+/* PSPMAN/PSVITAMAN use zero hero inset at intermediate tablet widths. */
+@media (min-width: 741px) and (max-width: 900px) {
+  .watch-stage { padding-top: 0; }
+}
+
+@media (max-width: 650px) {
+  .watch-page { padding: 0 6px 32px; }
+  .watch-tv { width: 80%; }
+  .watch-tv__scanlines { opacity: .16; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .watch-tv__power-flash { animation: none !important; }
+  .watch-tv__static,
+  .watch-tv__picture,
+  .watch-tv__glass,
+  .watch-osd { transition: none !important; }
+}
+
+/* The approved in-screen save interaction inherits the existing green OSD. */
+.watch-osd__action {
+  appearance: none; border: 0; background: transparent; color: inherit;
+  font: inherit; letter-spacing: inherit; text-shadow: inherit;
+  padding: .3em .4em; cursor: pointer; pointer-events: auto;
+}
+.watch-osd__action:focus-visible { outline: 1px solid currentColor; outline-offset: 2px; }
+.watch-osd__action:disabled { opacity: .5; cursor: wait; }

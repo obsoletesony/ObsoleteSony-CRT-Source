@@ -1,0 +1,104 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import "../styles/watch.css";
+
+/*
+ * The TV is the full-viewport hero. These are the two supplied art layers:
+ * frame: alpha-transparent screen opening; glass: screen-off appearance.
+ * Both files must be published together at /images/watch/.
+ *
+ * The versioned local CRT runtime supplies processed frames and audio.
+ * These art/OSD layers remain separate from the exported recording.
+ */
+---
+
+<SiteLayout
+  title="ObsoleteSony CRT | A VHS Video Experiment"
+  description="Drop a video into a vintage Sony Trinitron. A free browser-based ObsoleteSony experiment inspired by the look of VHS."
+  indexable={false}
+  hideFooter={false}
+  mainClass="watch-main"
+>
+  <section class="watch-page" data-watch-app data-state="off" aria-labelledby="watch-title">
+    <div class="watch-stage" id="watch-stage">
+      <div class="watch-tv" id="watch-tv" role="group" aria-label="Sony Trinitron television video player">
+        <img
+          class="watch-tv__glass"
+          src="/images/watch/tv-glass.webp"
+          width="2048"
+          height="1970"
+          alt=""
+          aria-hidden="true"
+          decoding="async"
+        />
+
+        <div class="watch-tv__screen" id="watch-screen">
+          <canvas
+            class="watch-tv__static"
+            width="320"
+            height="240"
+            aria-hidden="true"
+          ></canvas>
+          <!-- A strict 4:3 picture window. Widescreen/portrait sources are
+               center-cropped, not letterboxed or stretched. The bezel masks
+               the screen's slight physical curvature separately. -->
+          <div class="watch-tv__picture" id="watch-picture">
+            <canvas
+              class="watch-tv__video"
+              id="watch-video"
+              width="640"
+              height="480"
+              aria-label="Center-cropped 4:3 video preview in the Sony CRT"
+            ></canvas>
+          </div>
+          <div class="watch-tv__scanlines" aria-hidden="true"></div>
+          <div class="watch-tv__power-flash" aria-hidden="true"></div>
+
+          <div class="watch-osd">
+            <div class="watch-osd__message" data-watch-osd>DROP VIDEO</div>
+            <div class="watch-osd__submessage" data-watch-subosd>OR CLICK TO SELECT</div>
+            <button type="button" class="watch-osd__action" data-watch-save hidden>SAVE VIDEO</button>
+            <button type="button" class="watch-osd__action" data-watch-cancel hidden>CANCEL</button>
+            <div class="watch-osd__progress" data-watch-progress hidden>
+              <div class="watch-osd__segments" data-watch-segments></div>
+            </div>
+          </div>
+          <button
+            class="watch-tv__screen-action"
+            id="watch-screen-action"
+            type="button"
+            aria-label="Choose a video file to play on the television"
+          ></button>
+        </div>
+
+        <img
+          class="watch-tv__cabinet"
+          src="/images/watch/tv-frame.webp"
+          width="2047"
+          height="1901"
+          alt="1990s Sony Trinitron television"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </div>
+    </div>
+
+    <h1 id="watch-title" class="watch-screenreader-only">ObsoleteSony CRT</h1>
+    <p class="watch-screenreader-only" id="watch-status" role="status" aria-live="polite">
+      Drop a video onto the television or click the screen to choose a file.
+    </p>
+
+    <input
+      class="watch-file-input"
+      id="watch-file"
+      type="file"
+      accept="video/*,.mp4,.mov,.m4v,.webm"
+      aria-label="Select a local video"
+      tabindex="-1"
+    />
+  </section>
+</SiteLayout>
+
+<script>
+  import "../scripts/watch.ts";
+</script>

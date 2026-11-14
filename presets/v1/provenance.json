@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "upstream": "5d15ee0e48685a306109698356ccb847a54dc02c",
+  "core": "8cfc51014092a6dc1da5eb0217bb9ae6516b124e",
+  "sha256": "5a1145a6e12f3e53e37567ced75ba29b395c700c901ee6739c5246a1477000dc",
+  "generator": "scripts/generate-profiles.mjs",
+  "source": "ntsc-rs-web-wrapper/build/setting-descriptors.ts",
+  "removed": [
+    "video_scanline_phase_shift",
+    "video_scanline_phase_shift_offset"
+  ],
+  "changed": {
+    "vhs_chroma_vert_blend": {
+      "committed": true,
+      "generated": false
+    }
+  }
+}
