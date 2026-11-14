@@ -58,7 +58,8 @@ if(page) {
       timeLabel.textContent=timecode(time)+' / '+timecode(duration);
       updateCaptions(time);
     }
-    playButton.textContent=current.state==='playing'?'Ⅱ':'▶';
+    playButton.dataset.playing=String(current.state==='playing');
+    playButton.title=current.state==='playing'?'Pause':'Play';
     playButton.setAttribute('aria-label',current.state==='playing'?'Pause':'Play');
     syncVolume();
   }
@@ -70,7 +71,7 @@ if(page) {
 
   function setState(next:State) {
     state=next;page!.dataset.state=next;
-    const labels:Record<State,[string,string]>={off:['',''],idle:['DROP VIDEO','OR CLICK TO SELECT'],'drag-over':['RELEASE TO PLAY',''],loading:['LOADING...',''],playing:['',''],paused:['PAUSE',''],ended:['REPLAY','CLICK TO PLAY AGAIN'],exporting:['RECORDING',''],complete:['COMPLETE','CLICK TO PLAY AGAIN'],error:['NO SIGNAL','TRY ANOTHER FILE']};
+    const labels:Record<State,[string,string]>={off:['',''],idle:['DROP VIDEO','OR CLICK TO SELECT'],'drag-over':['RELEASE TO PLAY',''],loading:['LOADING...',''],playing:['',''],paused:['',''],ended:['REPLAY','CLICK TO PLAY AGAIN'],exporting:['RECORDING',''],complete:['COMPLETE','CLICK TO PLAY AGAIN'],error:['NO SIGNAL','TRY ANOTHER FILE']};
     [osd.textContent,sub.textContent]=labels[next];sub.hidden=!labels[next][1];
     save.hidden=!session || ['off','idle','drag-over','loading','error','exporting'].includes(next);
     transport.hidden=!session || ['off','idle','drag-over','loading','error'].includes(next);
