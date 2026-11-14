@@ -5,8 +5,10 @@ import path from 'node:path';
 import assert from 'node:assert/strict';
 const file=process.env.CRT_ORIGINAL_FILE;if(!file)throw new Error('CRT_ORIGINAL_FILE is required');
 const root=path.resolve(import.meta.dirname,'../..'),out=path.resolve(process.env.CRT_EVIDENCE??path.join(root,'original-mkv-evidence')),name=process.env.CRT_BROWSER??'chrome';await fs.mkdir(out,{recursive:true});
-const browser=await chromium.launch({executablePath:name==='edge'?'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe':'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true,args:['--autoplay-policy=no-user-gesture-required','--js-flags=--expose-gc']});
-const context=await browser.newContext({storageState:process.env.CRT_STORAGE_STATE,acceptDownloads:true,viewport:{width:1440,height:1000}}),page=await context.newPage(),report={browser:name,version:browser.version(),errors:[],uploads:[]};
+const launch={executablePath:name==='edge'?'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe':'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true,args:['--autoplay-policy=no-user-gesture-required','--js-flags=--expose-gc']};
+const browser=process.env.CRT_USER_DATA_DIR?null:await chromium.launch(launch);
+const context=browser?await browser.newContext({storageState:process.env.CRT_STORAGE_STATE,acceptDownloads:true,viewport:{width:1440,height:1000}}):await chromium.launchPersistentContext(path.resolve(process.env.CRT_USER_DATA_DIR),{...launch,acceptDownloads:true,viewport:{width:1440,height:1000}});
+const page=await context.newPage(),report={browser:name,version:context.browser()?.version(),profile:process.env.CRT_USER_DATA_DIR?'persistent':'temporary',errors:[],uploads:[]};
 page.on('pageerror',e=>report.errors.push(e.message));page.on('request',r=>{if(!['GET','HEAD'].includes(r.method()))report.uploads.push({origin:new URL(r.url()).origin,bytes:r.postDataBuffer()?.length??0});});
 await page.addInitScript(()=>{
  window.showSaveFilePicker=undefined;window.diagnostics=[];window.progress=null;window.openingHeap=[];
@@ -18,6 +20,7 @@ try{
  report.site=process.env.CRT_SITE??'http://127.0.0.1:4321/watch';await page.goto(report.site);
  const manifest=await context.request.get(new URL('/vendor/crt/1.0.1/manifest.json',report.site).href);assert.equal(manifest.status(),200);
  report.manifestSha256=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',await manifest.body())),v=>v.toString(16).padStart(2,'0')).join('');
+ report.storageBefore=await page.evaluate(()=>navigator.storage.estimate());
  const start=Date.now();await page.locator('#watch-file').setInputFiles(file);
  await page.waitForFunction(()=>!!window.session||document.querySelector('[data-watch-app]').dataset.state==='error',{},{timeout:120000});
  assert.notEqual(await page.locator('[data-watch-app]').getAttribute('data-state'),'error',await page.locator('#watch-status').innerText());
@@ -49,4 +52,4 @@ try{
  report.effectWorkersAfterDestroy=page.workers().filter(w=>w.url().includes('effect-worker')).length;assert.equal(report.effectWorkersAfterDestroy,0);assert(report.workersAfterDestroy<=1);assert.deepEqual(report.errors,[]);assert(report.uploads.every(x=>x.bytes<10000));
  console.log(name+' ORIGINAL PASS '+JSON.stringify({openMs:report.openMs,exportMs:report.exportMs,bytes:report.outputBytes,metrics:report.completed.metrics}));
  }
-}finally{await fs.writeFile(path.join(out,`${name}-original.json`),JSON.stringify(report,null,2));await browser.close();}
+}catch(error){report.failure=String(error);report.storageAtFailure=await page.evaluate(()=>navigator.storage.estimate()).catch(()=>null);throw error;}finally{await fs.writeFile(path.join(out,`${name}-original.json`),JSON.stringify(report,null,2));await context.close();await browser?.close();}

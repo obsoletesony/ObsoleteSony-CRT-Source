@@ -16,7 +16,7 @@ const input=metadata(source),results=[];
 assert.equal(Number(input.format.size),409432817,'This is not the reported original file size');
 const sourcePackets=JSON.parse(run(ffprobe,['-v','error','-count_packets','-select_streams','v:0','-show_entries','stream=nb_read_packets','-of','json',source]));
 assert.equal(Number(sourcePackets.streams[0].nb_read_packets),31087,'Independent source frame count differs');
-for(const name of ['chrome','edge']){
+for(const name of (process.env.CRT_BROWSER?[process.env.CRT_BROWSER]:['chrome','edge'])){
  const file=path.join(out,`${name}-original-processed.mp4`),meta=metadata(file),video=meta.streams.find(s=>s.codec_type==='video'),audio=meta.streams.find(s=>s.codec_type==='audio');
  assert.equal(video.codec_name,'h264');assert.equal(video.width,640);assert.equal(video.height,480);assert.equal(video.sample_aspect_ratio,'1:1');assert.equal(Number(video.nb_frames),31087);
  assert.equal(audio.codec_name,'aac');assert.equal(audio.channels,2);assert.equal(Number(audio.sample_rate),48000);assert(Math.abs(Number(meta.format.duration)-Number(input.format.duration))<.08);
@@ -42,4 +42,4 @@ for(const name of ['chrome','edge']){
  }finally{await browser.close();}
  results.push(result);
 }
-await fs.writeFile(path.join(out,'verified-original-exports.json'),JSON.stringify(results,null,2));console.log('Both complete original-file exports verified: 31,087 processed frames, stereo AAC, audio sync and native browser playback.');
+await fs.writeFile(path.join(out,process.env.CRT_BROWSER?`verified-original-${process.env.CRT_BROWSER}.json`:'verified-original-exports.json'),JSON.stringify(results,null,2));console.log('Complete original-file exports verified: 31,087 processed frames, stereo AAC, audio sync and native browser playback.');
