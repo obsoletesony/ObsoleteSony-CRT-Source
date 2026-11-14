@@ -1,5 +1,6 @@
 ---
-import SiteLayout from "../layouts/SiteLayout.astro";
+import BooksLayout from "../layouts/BooksLayout.astro";
+import { watchNavigation } from "../data/watch-navigation";
 import "../styles/watch.css";
 
 /*
@@ -12,13 +13,16 @@ import "../styles/watch.css";
  */
 ---
 
-<SiteLayout
+<BooksLayout
   title="ObsoleteSony CRT | A VHS Video Experiment"
   description="Drop a video into a vintage Sony Trinitron. A free browser-based ObsoleteSony experiment inspired by the look of VHS."
   indexable={false}
-  hideFooter={false}
-  mainClass="watch-main"
+  bodyClass="watch-theme"
+  themeColor="#0b0b0b"
+  sectionNavigation={watchNavigation}
+  showSectionAnnouncement={false}
 >
+  <main class="watch-main">
   <section class="watch-page" data-watch-app data-state="off" data-assets-ready="false" aria-labelledby="watch-title">
     <div class="watch-stage" id="watch-stage">
       <div class="watch-art-loader" role="status" aria-live="polite">
@@ -136,9 +140,9 @@ import "../styles/watch.css";
       aria-label="Select a local video"
       tabindex="-1"
     />
-    <a class="watch-source-link" href="https://github.com/obsoletesony/ObsoleteSony-CRT-Source" target="_blank" rel="noopener noreferrer">Source</a>
   </section>
-</SiteLayout>
+  </main>
+</BooksLayout>
 
 <script>
   import "../scripts/watch.ts";
