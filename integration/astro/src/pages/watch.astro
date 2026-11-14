@@ -88,7 +88,15 @@ import "../styles/watch.css";
       </div>
       <div class="watch-transport__row">
         <button class="watch-transport__button watch-transport__play" type="button"
-          data-watch-play aria-label="Pause" title="Play or pause">Ⅱ</button>
+          data-watch-play data-playing="true" aria-label="Pause" title="Pause">
+          <svg class="watch-transport__icon watch-transport__icon--play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+            <path d="M8 5.5v13l10-6.5z" />
+          </svg>
+          <svg class="watch-transport__icon watch-transport__icon--pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+            <rect x="6" y="5" width="4" height="14" rx="1" />
+            <rect x="14" y="5" width="4" height="14" rx="1" />
+          </svg>
+        </button>
         <span class="watch-transport__time" data-watch-time>0:00 / 0:00</span>
         <button class="watch-transport__button watch-transport__mute" type="button"
           data-watch-mute aria-label="Mute audio" title="Mute or unmute">VOL</button>
