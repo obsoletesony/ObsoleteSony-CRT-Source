@@ -1,5 +1,6 @@
 import {getWatchCrop43,WATCH_VIDEO_ASPECT_RATIO} from '../lib/watchCrop43';
 import {loadCRT,type CRTSession,type CRTRuntime,type CRTProgress} from '../lib/crt';
+import {parseWatchCaptions,captionAt,type WatchCue} from './watch-subtitles';
 
 type State='off'|'idle'|'drag-over'|'loading'|'playing'|'paused'|'ended'|'exporting'|'complete'|'error';
 const page=document.querySelector<HTMLElement>('[data-watch-app]');
@@ -10,18 +11,65 @@ if(page) {
   const osd=element('[data-watch-osd]'), sub=element('[data-watch-subosd]'), status=element('#watch-status');
   const progress=element('[data-watch-progress]'), segments=element('[data-watch-segments]');
   const save=element<HTMLButtonElement>('[data-watch-save]'), cancel=element<HTMLButtonElement>('[data-watch-cancel]');
+  const transport=element<HTMLElement>('[data-watch-transport]');
+  const playButton=element<HTMLButtonElement>('[data-watch-play]');
+  const seek=element<HTMLInputElement>('#watch-seek');
+  const timeLabel=element<HTMLElement>('[data-watch-time]');
+  const captions=element<HTMLElement>('[data-watch-captions]');
+  const captionsButton=element<HTMLButtonElement>('[data-watch-caption-toggle]');
+  const captionsFile=element<HTMLInputElement>('#watch-captions-file');
+  const fullscreen=element<HTMLButtonElement>('[data-watch-fullscreen]');
   let session:CRTSession|null=null, runtime:CRTRuntime|null=null;
   let generation=0, loadController:AbortController|null=null;
   let state:State='off', beforeDrag:State='idle', depth=0;
   let saving=false, cancelRequested=false;
+  let subtitleCues:WatchCue[]=[];
+  let subtitlesEnabled=false;
+  let scrubbing=false;
+  let seekGeneration=0;
   let download:{url:string;remove:()=>Promise<void>;timer:number}|null=null;
   const uiAbort=new AbortController();
   const statusText=(text:string)=>{status.textContent=text;};
+  function timecode(value:number) {
+    const total=Math.max(0,Math.floor(Number.isFinite(value)?value:0));
+    const seconds=String(total%60).padStart(2,'0');
+    const minutes=Math.floor(total/60);
+    return minutes>=60?Math.floor(minutes/60)+':'+String(minutes%60).padStart(2,'0')+':'+seconds:minutes+':'+seconds;
+  }
+  function updateCaptions(time:number) {
+    captions.textContent=subtitlesEnabled?captionAt(subtitleCues,time):'';
+  }
+  function updateTransport() {
+    const current=session;
+    if(!current)return;
+    const duration=current.metadata.duration;
+    const time=Math.max(0,Math.min(duration,current.timestamp));
+    if(!scrubbing) {
+      seek.value=String(Math.round(time/Math.max(duration,.001)*1000));
+      timeLabel.textContent=timecode(time)+' / '+timecode(duration);
+      updateCaptions(time);
+    }
+    playButton.textContent=current.state==='playing'?'Ⅱ':'▶';
+    playButton.setAttribute('aria-label',current.state==='playing'?'Pause':'Play');
+  }
+  function syncCaptionButton() {
+    captionsButton.setAttribute('aria-pressed',String(subtitlesEnabled&&subtitleCues.length>0));
+    captionsButton.setAttribute('aria-label',subtitleCues.length?(subtitlesEnabled?'Hide subtitles':'Show subtitles'):'Load subtitles');
+    captionsButton.title=subtitleCues.length?'Toggle subtitles (Shift-click to replace file)':'Load SRT/VTT subtitles';
+  }
+
   function setState(next:State) {
     state=next;page!.dataset.state=next;
     const labels:Record<State,[string,string]>={off:['',''],idle:['DROP VIDEO','OR CLICK TO SELECT'],'drag-over':['RELEASE TO PLAY',''],loading:['LOADING...',''],playing:['',''],paused:['PAUSE',''],ended:['REPLAY','CLICK TO PLAY AGAIN'],exporting:['RECORDING',''],complete:['COMPLETE','CLICK TO PLAY AGAIN'],error:['NO SIGNAL','TRY ANOTHER FILE']};
     [osd.textContent,sub.textContent]=labels[next];sub.hidden=!labels[next][1];
-    save.hidden=!session || !['paused','ended','complete'].includes(next);
+    save.hidden=!session || ['off','idle','drag-over','loading','error','exporting'].includes(next);
+    transport.hidden=!session || ['off','idle','drag-over','loading','error'].includes(next);
+    seek.disabled=!session || next==='exporting';
+    playButton.disabled=!session || next==='exporting';
+    captionsButton.disabled=!session || next==='exporting';
+    fullscreen.disabled=!session || next==='exporting';
+    save.disabled=!session || next==='exporting';
+    if(['loading','error','idle','off'].includes(next)) captions.textContent='';
     cancel.hidden=!['exporting','loading'].includes(next);cancel.disabled=false;
     progress.hidden=next!=='exporting';
     screen.disabled=next==='loading'||next==='exporting';
@@ -41,6 +89,8 @@ if(page) {
     if(!file) return;
     const token=++generation;loadController?.abort();loadController=new AbortController();
     const previous=session;session=null;
+    subtitleCues=[];subtitlesEnabled=false;syncCaptionButton();captionsFile.value='';
+    scrubbing=false;seekGeneration++;
     setState('loading');statusText(`Opening ${file.name} on your computer.`);
     window.dispatchEvent(new CustomEvent('watch:source-selected',{detail:{file}}));
     try {
@@ -63,6 +113,7 @@ if(page) {
       const refresh=()=>{
         if(session!==loaded||saving||state==='drag-over') return;
         setState(loaded.state==='playing'?'playing':loaded.timestamp>=meta.duration-.04?'ended':'paused');
+        updateTransport();
       };
       loaded.addEventListener('statechange',refresh);loaded.addEventListener('frame',refresh);
       loaded.addEventListener('error',(event)=>{
@@ -70,6 +121,7 @@ if(page) {
         showError((event as ErrorEvent).error??(event as ErrorEvent).message,'Playback stopped');
       });
       setState('paused');
+      updateTransport();
       statusText(`Processed video ready${meta.hasAudio?' with sound':''}. ${meta.warnings.join(' ')} Click the television to pause or resume.`);
       try {await loaded.play();if(token===generation) refresh();}
       catch {if(token===generation) {setState('paused');statusText('Video loaded. Click the television to start sound and playback.');}}
@@ -86,8 +138,8 @@ if(page) {
     if(saving||state==='loading') return;
     const current=session;
     try {
-      if(current.state==='playing') {current.pause();setState('paused');}
-      else {if(current.timestamp>=current.metadata.duration-.04) await current.seek(0);await current.play();if(session===current)setState('playing');}
+      if(current.state==='playing') {current.pause();setState('paused');updateTransport();}
+      else {if(current.timestamp>=current.metadata.duration-.04) await current.seek(0);await current.play();if(session===current){setState('playing');updateTransport();}}
     } catch(error) {if(session===current){setState('paused');statusText(`Could not start playback: ${String(error)}`);}}
   }
   function showProgress(value:CRTProgress) {
@@ -131,6 +183,57 @@ if(page) {
     }
   }
   for(let i=0;i<24;i++) segments.append(document.createElement('span'));
+  playButton.addEventListener('click',()=>void toggle());
+  seek.addEventListener('input',()=>{
+    if(!session||saving)return;
+    scrubbing=true;
+    const time=session.metadata.duration*Number(seek.value)/1000;
+    timeLabel.textContent=timecode(time)+' / '+timecode(session.metadata.duration);
+    updateCaptions(time);
+  });
+  seek.addEventListener('change',()=>{
+    const current=session;
+    if(!current||saving){scrubbing=false;return;}
+    const target=current.metadata.duration*Number(seek.value)/1000;
+    const resume=current.state==='playing';
+    const serial=++seekGeneration;
+    void (async()=>{
+      try {
+        await current.seek(target);
+        if(current!==session||serial!==seekGeneration)return;
+        if(resume)await current.play();
+        if(current===session){setState(current.state==='playing'?'playing':'paused');updateTransport();}
+      } catch(error){if(current===session)statusText('Seek failed: '+String(error));}
+      finally {if(serial===seekGeneration){scrubbing=false;updateTransport();}}
+    })();
+  });
+  captionsButton.addEventListener('click',event=>{
+    if(event.shiftKey||!subtitleCues.length){captionsFile.click();return;}
+    subtitlesEnabled=!subtitlesEnabled;syncCaptionButton();updateTransport();
+  });
+  captionsFile.addEventListener('change',()=>{
+    const file=captionsFile.files?.[0];captionsFile.value='';
+    if(!file)return;
+    void (async()=>{
+      if(!/\.(srt|vtt)$/i.test(file.name)||file.size>2_000_000){
+        statusText('Subtitles must be an SRT or VTT file under 2 MB.');return;
+      }
+      const parsed=parseWatchCaptions(await file.text());
+      if(!parsed.length){statusText('No readable subtitle cues found.');return;}
+      subtitleCues=parsed;subtitlesEnabled=true;syncCaptionButton();updateTransport();
+      statusText('Loaded '+subtitleCues.length+' subtitle cues from '+file.name+'. Captions are preview-only, not included in the exported MP4.');
+    })().catch(error=>statusText('Could not load subtitles: '+String(error)));
+  });
+  fullscreen.addEventListener('click',()=>{
+    void (document.fullscreenElement?document.exitFullscreen():page!.requestFullscreen())
+      .catch(error=>statusText('Fullscreen unavailable: '+String(error)));
+  });
+  document.addEventListener('fullscreenchange',()=>{
+    const active=Boolean(document.fullscreenElement);
+    fullscreen.setAttribute('aria-label',active?'Exit fullscreen':'Enter fullscreen');
+    fullscreen.title=active?'Exit fullscreen':'Fullscreen';
+  },{signal:uiAbort.signal});
+  syncCaptionButton();
   screen.addEventListener('click',()=>void toggle());
   save.addEventListener('click',()=>void saveVideo());
   cancel.addEventListener('click',()=>{cancel.disabled=true;sub.textContent='CANCELLING';sub.hidden=false;if(state==='loading'){loadController?.abort();return;}cancelRequested=true;void session?.cancelExport();});
