@@ -8,7 +8,7 @@ const browserName=process.env.CRT_BROWSER??'chrome';
 const browser=await chromium.launch({executablePath:browserName==='edge'?'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe':'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true,args:['--autoplay-policy=no-user-gesture-required','--js-flags=--expose-gc']});
 const report={browser:browserName,version:browser.version(),cases:[],errors:[],uploads:[]};
 try {
- for(const name of (process.env.CRT_CASES??'aac.mkv,ac3-aac.mkv,ac3.mkv,eac3.mkv,dts.mkv,opus.mkv,delayed.mkv,mpeg4.mkv,long-1350s.mkv').split(',')) {
+ for(const name of (process.env.CRT_CASES??'aac.mkv,ac3-aac.mkv,ac3.mkv,eac3.mkv,dts.mkv,opus.mkv,delayed.mkv,profile-high-ac3.mkv,mpeg4.mkv,long-1350s.mkv').split(',')) {
   const context=await browser.newContext({acceptDownloads:true,viewport:{width:1440,height:1000},storageState:process.env.CRT_STORAGE_STATE}),page=await context.newPage();
   await page.addInitScript(()=>{
    window.showSaveFilePicker=undefined;window.audit={diagnostics:[],audioNodes:0,contexts:[],progress:[],openingHeap:[]};

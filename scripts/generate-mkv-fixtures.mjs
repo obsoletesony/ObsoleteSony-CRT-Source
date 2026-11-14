@@ -15,6 +15,9 @@ for(const [name,streams] of [
 ]) run([...input,...streams,'-c:v','libx264','-preset','ultrafast','-crf','24',path.join(out,`${name}.mkv`)]);
 run([...input,'-map','0:v','-map','1:a','-c:v','mpeg4','-c:a','aac',path.join(out,'mpeg4.mkv')]);
 run(['-i',path.join(out,'aac.mkv'),'-c','copy','-output_ts_offset','2',path.join(out,'delayed.mkv')]);
+// Observed original-file format: H.264 High level 4.0, 1440x1080 yuv420p,
+// 24000/1001 fps, no B-frames, one 48 kHz stereo AC-3 192 kb/s track.
+run(['-f','lavfi','-i','testsrc2=size=1440x1080:rate=24000/1001:duration=3','-f','lavfi','-i','sine=frequency=440:sample_rate=48000:duration=3','-c:v','libx264','-preset','fast','-profile:v','high','-level:v','4.0','-bf','0','-pix_fmt','yuv420p','-crf','24','-c:a','ac3','-b:a','192k','-ac','2','-shortest',path.join(out,'profile-high-ac3.mkv')]);
 if(process.env.CRT_LONG==='1')run(['-stream_loop','449','-i',path.join(out,'aac.mkv'),'-c','copy',path.join(out,'long-1350s.mkv')]);
 if(process.env.CRT_SYNC_MP4){
  run(['-i',path.resolve(process.env.CRT_SYNC_MP4),'-c','copy',path.join(out,'long-sync.mkv')]);

@@ -55,4 +55,15 @@ for(const module of ['muxer','isobmff/isobmff-muxer','isobmff/isobmff-boxes']) {
   await fs.writeFile(path.join(base,relative),source);
  }
 }
-console.log('Applied/rechecked Mediabunny 1.55.7 CodecDelay and MP4 preroll corrections.');
+for(const relative of ['src/matroska/matroska-demuxer.ts','dist/modules/src/matroska/matroska-demuxer.js']){
+ let source=(await fs.readFile(path.join(base,relative),'utf8')).replaceAll('\r\n','\n');
+ if(source.includes('ObsoleteSony: keep fixed AC-3 lace durations'))continue;
+ const before='const blockDuration = originalBlock.duration || frameCount * (track.defaultDuration ?? 0);';
+ if(source.split(before).length!==2)throw new Error(`Unexpected AC-3 lace patch context: ${relative}`);
+ source=source.replace(before,`// ObsoleteSony: keep fixed AC-3 lace durations; do not spread a following timestamp gap.
+            const blockDuration = track.info.type === 'audio' && track.info.codec === 'ac3' && track.defaultDuration !== null
+                ? frameCount * track.defaultDuration
+                : originalBlock.duration || frameCount * (track.defaultDuration ?? 0);`);
+ await fs.writeFile(path.join(base,relative),source);
+}
+console.log('Applied/rechecked Mediabunny 1.55.7 CodecDelay, AC-3 lacing and MP4 preroll corrections.');

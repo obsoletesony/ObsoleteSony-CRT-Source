@@ -19,7 +19,7 @@ for(const browser of ['chrome','edge']) {
   assert(Math.abs(Number(output.format.duration)-Number(input.format.duration))<.08,`${item.name}: duration mismatch`);
   assert.equal(audio.length,item.metadata.hasAudio?1:0);
   let measured;
-  if(audio.length){assert.equal(audio[0].codec_name,'aac');const samples=pcm(file,'0:a:0');assert(samples.length>1000);const expected=item.name==='ac3-aac.mkv'&&item.metadata.audioTrackId===3?880:440;measured={frequency:expected,amplitude:tone(samples,expected),wrongTone:tone(samples,expected===440?880:440)};assert(measured.amplitude>.02);assert(measured.amplitude>measured.wrongTone*10,'Wrong audio track exported');}
+  if(audio.length){assert.equal(audio[0].codec_name,'aac');const selected=input.streams.find(s=>s.index===item.metadata.audioTrackId-1);assert.equal(audio[0].channels,selected.channels,'Audio channel count changed');assert.equal(audio[0].sample_rate,selected.sample_rate,'Audio sample rate changed');const samples=pcm(file,'0:a:0');assert(samples.length>1000);const expected=item.name==='ac3-aac.mkv'&&item.metadata.audioTrackId===3?880:440;measured={frequency:expected,amplitude:tone(samples,expected),wrongTone:tone(samples,expected===440?880:440)};assert(measured.amplitude>.02);assert(measured.amplitude>measured.wrongTone*10,'Wrong audio track exported');}
   report.push({browser,name:item.name,input:input.streams.map(s=>({codec:s.codec_name,profile:s.profile,pixelFormat:s.pix_fmt,type:s.codec_type,start:s.start_time,sampleRate:s.sample_rate})),output:{width:video.width,height:video.height,video:video.codec_name,audio:audio[0]?.codec_name??null,duration:output.format.duration},measured});
  }
 }

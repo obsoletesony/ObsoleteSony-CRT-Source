@@ -195,7 +195,12 @@ export default class RenderJob extends TypedEventTarget<ProgressEvent | StateCha
                             'NotSupportedError',
                         );
                     }
-                    audioSource = new AudioSampleSource(sourceSettings);
+                    // Some Windows native AC-3 decoders return a 5.1 output layout
+                    // even for a stereo source. Preserve the selected track's format.
+                    audioSource = new AudioSampleSource({...sourceSettings, transform: {
+                        numberOfChannels: await audioTrack.getNumberOfChannels(),
+                        sampleRate: await audioTrack.getSampleRate(),
+                    }});
                     audioEncoders.push(async() => {
                         const audioSink = new AudioSampleSink(audioTrack);
                         for await (let sample of audioSink.samples()) {

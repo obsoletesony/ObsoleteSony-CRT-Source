@@ -35,7 +35,7 @@
     "src/crt/upstream/encode-png.ts": "2d9a28d54176318dbec50171ea4ef79ba6f4c7f529c0c1d92f1dac15c1338175",
     "src/crt/upstream/media-player.ts": "e55fe5d41b8973ac078f9458f8c16a06e178eb704b89d62b9557ce2d70962db7",
     "src/crt/upstream/ntsc-rs-module.ts": "1fee5042efbe3770a4506894e62130c07de5029b8243677f8ab495c9561c6699",
-    "src/crt/upstream/render-job.ts": "f87938a724380b18499e9dea65302c5077f5f2a0653ace69aa2490ea2f3252e7",
+    "src/crt/upstream/render-job.ts": "01ed2cee5b702f2bc51cb8d6906affbebca95b89037da0950128fc2b6eaa09ff",
     "src/crt/upstream/still-image-media.ts": "27516e1adddf848acabd7db5daaf43e95f84ebfb8904e2155bfe6aaf75b125ba",
     "src/crt/upstream/worker-rpc.ts": "2c95da5bdda8ec41e1c5f7a4a415ac372cab67673d071fc2025f22c1edba4e5d",
     "presets/v1/catalog.json": "b36635d99caef801f52ff2084d197b1aa1176be9424df0f5b68974a9a48e737a",
@@ -56,10 +56,10 @@
     "third_party/ac3/licenses/ffmpeg/COPYING.LGPLv2.1": "246041b6ecf9bc32d718a62c57877c78b5eb397b6467e74ed7ae2626ab189c30",
     "third_party/ac3/licenses/ffmpeg/LICENSE.md": "e6dc72d5665a1ebd6dcc841de59278dad4ca77ecc47b03f1064a55c3e9ea8bb8",
     "third_party/mediabunny/LICENSE": "3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04",
-    "third_party/mediabunny/README.md": "312a41000731ccfad08557479c358dd7022c9f84692a8c9457d5a42d90db43c5",
+    "third_party/mediabunny/README.md": "b1318349efe233a3cdaea9458a4a4164f74093bc21cd308b29561bb6e0d0878c",
     "third_party/mediabunny/isobmff-boxes.ts": "5340742267ab3439e453f647981c5b37867978d6daf57adec22e8c6660005333",
     "third_party/mediabunny/isobmff-muxer.ts": "60d13cac77179cab6b96822eef7e729a9109bab8a714da611f3fc8cc97ae7146",
-    "third_party/mediabunny/matroska-demuxer.ts": "dfc9377a28463cb259d9f08f4971f7da10ecc5eac1989aa218ab3b0c5dd4ba8d",
+    "third_party/mediabunny/matroska-demuxer.ts": "8c1d67589c3034d07a4b00d386f7cb3518cfd4a35da9a46b19c047e9985ebf65",
     "third_party/mediabunny/muxer.ts": "a75abd654dfa7fb072245d66664a9980079113fcfcc4e795aaeeb7a3c2f8b810",
     "package-lock.json": "4857907b11ddd3a897dfb07c7ec493488ff9a2f5b81f310032f2ed81addefae4",
     "ntsc-rs-web-wrapper/Cargo.lock": "fa5fbe2bffaf7f7d9518d350c8fffedc0916e4c8c3b38e1ee2607f2282d9f9b5",
@@ -67,7 +67,7 @@
     "vite.crt.config.ts": "e8b0a9b7d7703256677723a36b23989c7a8cbf4660c23276d894f8377eb5e696",
     "scripts/generate-profiles.mjs": "d4dbc3b60d3c2c0dbc49d41ac73c5b2378842bf4c6745d61385de54c486ea0b2",
     "scripts/package-crt.mjs": "8fe1bdf5a2a8fef4e064e120b21dae7dea631b30fbcfe2047566566578e53acc",
-    "scripts/patch-mediabunny.mjs": "1caf6e4b07296b4fe2c7d4b19b76bd241501ece0c3d5b9040c24e05a11827d3d",
+    "scripts/patch-mediabunny.mjs": "d90515673ece2637ca4334254b002a85c0a8b43bb57d85c43489a70237c1afd6",
     "third_party/ac3/PROVENANCE.json": "9cab08669af201c963cb4addcef1f65a9d921bb1000f14d0971503f948371fe6",
     "third_party/ac3/README.md": "e8625fca693933b087bda2eef2d32189c50bdb70615d29e32fcdc037ceafc324",
     "third_party/ac3/LICENSE": "3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04",
@@ -123,12 +123,12 @@
       "sha256": "3d63d33235a4a62fa96d43db51d4694e7821d715431852f072168180a0240386"
     },
     "crt.js": {
-      "bytes": 472956,
-      "sha256": "87c76a17dbb42f798e7a8e8d414e016cc928a2deef433c134fb55d4b79fc8339"
+      "bytes": 473145,
+      "sha256": "08e2ce00632172283400613c28e88c6bab705dfeadb032bb592b1a49f79749b6"
     },
     "crt.js.map": {
-      "bytes": 1989383,
-      "sha256": "6b8f1905fe158374af4505650d2910d2c13f605f12037053b7185aa807396633"
+      "bytes": 1990182,
+      "sha256": "c3b646a2f69be1e5db7c57fab7a3d5cf2414bb82332fee09e1a8d94d2aacf184"
     },
     "notices/FFmpeg-LGPL-2.1.txt": {
       "bytes": 26517,

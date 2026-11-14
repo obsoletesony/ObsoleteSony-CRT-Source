@@ -857,7 +857,10 @@ export class MatroskaDemuxer extends Demuxer {
 
 			blocks.splice(blockIndex, 1); // Remove the original block
 
-			const blockDuration = originalBlock.duration || frameCount * (track.defaultDuration ?? 0);
+			// ObsoleteSony: keep fixed AC-3 lace durations; do not spread a following timestamp gap.
+            const blockDuration = track.info.type === 'audio' && track.info.codec === 'ac3' && track.defaultDuration !== null
+                ? frameCount * track.defaultDuration
+                : originalBlock.duration || frameCount * (track.defaultDuration ?? 0);
 
 			// Now, let's insert each frame as its own block
 			for (let i = 0; i < frameCount; i++) {
