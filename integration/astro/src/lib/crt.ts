@@ -3,6 +3,8 @@ export interface CRTProgress {fraction:number;processedSeconds:number;duration:n
 export interface CRTSession extends EventTarget {
   metadata:{width:number;height:number;duration:number;crop:{x:number;y:number;width:number;height:number};hasAudio:boolean;frameCount:number;firstTimestamp:number;audioTrackId:number|null;warnings:string[]};
   state:'playing'|'paused'; timestamp:number; seed:number;
+  /** Exposed by the pinned headless CRT runtime. Playback volume does not affect export. */
+  player:{volume:number};
   play():Promise<void>;pause():void;seek(seconds:number):Promise<void>;destroy():Promise<void>;
   export(handle:unknown,progress:(value:CRTProgress)=>void,temporary?:boolean):Promise<File|null>;
   cancelExport():Promise<void>;
