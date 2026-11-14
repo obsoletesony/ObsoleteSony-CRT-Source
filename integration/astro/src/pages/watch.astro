@@ -90,6 +90,10 @@ import "../styles/watch.css";
         <button class="watch-transport__button watch-transport__play" type="button"
           data-watch-play aria-label="Pause" title="Play or pause">Ⅱ</button>
         <span class="watch-transport__time" data-watch-time>0:00 / 0:00</span>
+        <button class="watch-transport__button watch-transport__mute" type="button"
+          data-watch-mute aria-label="Mute audio" title="Mute or unmute">VOL</button>
+        <input class="watch-transport__volume" data-watch-volume type="range" min="0" max="100" step="1" value="100"
+          aria-label="Playback volume" />
         <span class="watch-transport__spacer"></span>
         <button class="watch-transport__button" type="button" data-watch-caption-toggle
           aria-label="Load subtitles" title="Load an SRT or VTT subtitle file">CC</button>
