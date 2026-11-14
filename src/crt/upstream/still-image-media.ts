@@ -1,6 +1,8 @@
 // Adapted from ntsc-rs-web 5d15ee0 (GPL-3.0-or-later). See docs/UPSTREAM-CHANGES.md.
 import {ALL_FORMATS, AnyIterable, BlobSource, Input, InputAudioTrack, VideoSample, VideoSampleSink} from 'mediabunny';
 import {TypedEvent, TypedEventTarget} from 'valadaptive-lib/util/typed-events';
+import {inspectStage,MediaOpenError,type OpenOptions} from '../diagnostics';
+import {selectAudio,type AudioSelection} from '../audio-selection';
 
 export interface VideoSampleSinkLike {
     getSample(timestamp: number): Promise<VideoSample | null>;
@@ -89,6 +91,9 @@ export class WrappedInput extends TypedEventTarget<FrameRateChangeEvent> {
     readonly visibleWidth: number;
     readonly visibleHeight: number;
     readonly isStillImage: boolean;
+    firstTimestamp=0;
+    audioSelection:AudioSelection={track:null,warnings:[],tracks:[]};
+    private removeAbortListener=()=>{};
 
     private constructor(
         input: Input | null,
@@ -112,10 +117,11 @@ export class WrappedInput extends TypedEventTarget<FrameRateChangeEvent> {
         this.isStillImage = isStillImage;
     }
 
-    static async create(source: Blob, options: {
+    static async create(source: Blob, options: OpenOptions & {
         calculateFrameRate?: boolean,
         stillImageFrameRate: number,
         stillImageDuration?: number,
+        audioTrackId?:number|null,
     }) {
         if (source.type.startsWith('image/')) {
             const image = await createImageBitmap(source);
@@ -139,18 +145,31 @@ export class WrappedInput extends TypedEventTarget<FrameRateChangeEvent> {
             source: new BlobSource(source),
             formats: ALL_FORMATS,
         });
+        const abort=()=>input.dispose();
+        options.signal?.addEventListener('abort',abort,{once:true});
         try {
-        const duration = await input.computeDuration();
-        const audioTracks = await input.getAudioTracks();
-        const videoTrack = await input.getPrimaryVideoTrack();
+        const {videoTrack,audioTracks}=await inspectStage(options,'container',async()=>({
+            videoTrack:await input.getPrimaryVideoTrack(),audioTracks:await input.getAudioTracks(),
+        }));
         if (!videoTrack) {
-            throw new Error('No input video track');
+            throw new MediaOpenError('container','This file has no video track.','NO VIDEO TRACK','SELECT A VIDEO FILE');
         }
-
-        if (!(await videoTrack.canDecode())) {
-            throw new Error('Cannot decode video track. Try another browser?');
-        }
-
+        await inspectStage(options,'video-capability',async()=>{
+            const codec=await videoTrack.getCodecParameterString()??await videoTrack.getInternalCodecId()??'unknown';
+            options.onDiagnostic?.({stage:'video-capability',state:'progress',elapsedMs:0,details:{codec}});
+            if(!await videoTrack.canDecode()) throw new MediaOpenError('video-capability',`This browser cannot decode video codec ${String(codec)} for CRT processing. Convert the file locally to H.264 (8-bit yuv420p) with AAC audio in MP4, then select that file. No video was uploaded.`, 'VIDEO UNSUPPORTED','CONVERT TO H.264 MP4');
+        });
+        const videoSampleSink = new VideoSampleSink(videoTrack);
+        const firstTimestamp=Math.max(0,await videoTrack.getFirstTimestamp());
+        await inspectStage(options,'first-frame',async()=>{
+            const sample=await videoSampleSink.getSample(firstTimestamp);
+            if(!sample) throw new Error(`No decoded video frame at the first presentation timestamp (${firstTimestamp}s).`);
+            sample.close();
+        });
+        const selection=await inspectStage(options,'audio-selection',()=>selectAudio(audioTracks,options,options.audioTrackId));
+        options.onDiagnostic?.({stage:'audio-selection',state:'progress',elapsedMs:0,details:{tracks:selection.tracks,selectedId:selection.track?.id??null,warnings:selection.warnings}});
+        // Matroska duration metadata may include the start offset already. Use actual end timestamps.
+        const duration=await inspectStage(options,'container',()=>input.computeDuration([videoTrack,...(selection.track?[selection.track]:[])]));
 
         let frameRate = null;
         if (options.calculateFrameRate) {
@@ -160,18 +179,20 @@ export class WrappedInput extends TypedEventTarget<FrameRateChangeEvent> {
             frameRate = packetStats.averagePacketRate;
         }
 
-        const videoSampleSink = new VideoSampleSink(videoTrack);
-        return new WrappedInput(
+        const result=new WrappedInput(
             input,
             frameRate,
             duration,
-            audioTracks,
+            selection.track?[selection.track]:[],
             videoSampleSink,
             await videoTrack.getDisplayWidth(),
             await videoTrack.getDisplayHeight(),
             false,
         );
-        } catch (error) { input.dispose(); throw error; }
+        result.firstTimestamp=firstTimestamp;result.audioSelection=selection;
+        result.removeAbortListener=()=>options.signal?.removeEventListener('abort',abort);
+        return result;
+        } catch (error) {options.signal?.removeEventListener('abort',abort);input.dispose(); throw error; }
     }
 
     get audioTracks() {
@@ -193,7 +214,9 @@ export class WrappedInput extends TypedEventTarget<FrameRateChangeEvent> {
     }
 
     close() {
+        this.removeAbortListener();
         this.input?.dispose();
         this._videoSampleSink.close?.();
     }
+    finishOpening() {this.removeAbortListener();}
 }

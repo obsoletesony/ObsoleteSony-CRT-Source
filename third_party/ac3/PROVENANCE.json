@@ -1,0 +1,10 @@
+{
+  "package": "@mediabunny/ac3",
+  "version": "1.66.0",
+  "gitCommit": "5d270321467df4d138bb30df731bb0af2780939a",
+  "repository": "https://github.com/Vanilagy/mediabunny",
+  "ffmpegCommit": "60a2818f76dcd1fee3155b1791304af104a0fc1b",
+  "emscriptenVersion": "4.0.21",
+  "embeddedWasmSHA256": "490fb5ba2d4e0dd8d49762f969e831191c1f2ad636b0658fea44e6950893a1d2",
+  "source": "Unmodified src, patches, licenses and README from the exact locked npm package. FFmpeg is a pinned submodule. README contains native rebuild commands; npm lockfile contains package integrity."
+}

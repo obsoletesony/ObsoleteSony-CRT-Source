@@ -189,8 +189,9 @@ export default class MediaPlayer extends TypedEventTarget<FrameEvent | StateChan
         workerPool: Promise<EffectWorkerPool>,
         settings: PipelineSettings,
         stillImageFrameRate: number,
+        preparedInput?: WrappedInput,
     ) {
-        const input = await WrappedInput.create(source, {calculateFrameRate: true, stillImageFrameRate});
+        const input = preparedInput??await WrappedInput.create(source, {calculateFrameRate: true, stillImageFrameRate});
 
         const audioTrack: InputAudioTrack | undefined = input.audioTracks[0];
         const audioContext = new AudioContext({sampleRate: audioTrack?.sampleRate});
@@ -201,7 +202,7 @@ export default class MediaPlayer extends TypedEventTarget<FrameEvent | StateChan
         const audioSink = audioTrack ? new AudioBufferSink(audioTrack) : null;
 
         try {
-        const currentFrame = await input.videoSink.getSample(0);
+        const currentFrame = await input.videoSink.getSample(input.firstTimestamp);
         if (!currentFrame) throw new Error("No decodable video frames");
         const effectPool = await workerPool;
 
@@ -344,6 +345,7 @@ export default class MediaPlayer extends TypedEventTarget<FrameEvent | StateChan
         if (this.destroyed) return;
         if (this.state === 'playing') this.stopPlaying();
         this.queuedSeekTime = timestamp;
+        this.queuedSeekTime=Math.max(this.input.firstTimestamp,this.queuedSeekTime);
         if (this.seekTask) return this.seekTask;
         this.seekTask = (async() => {
             while (this.queuedSeekTime !== null && !this.destroyed) {
@@ -384,7 +386,7 @@ export default class MediaPlayer extends TypedEventTarget<FrameEvent | StateChan
 
         // If we're at the end, restart the video from the beginning
         if (this.playbackStartTimeMedia >= (this.input.duration ?? Infinity)) {
-            this.playbackStartTimeMedia = 0;
+            this.playbackStartTimeMedia = this.input.firstTimestamp;
         }
 
         this.playbackStartTimeGlobal = this.audioContext.currentTime;
