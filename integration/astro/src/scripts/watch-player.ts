@@ -22,10 +22,16 @@ if(page) {
     const labels:Record<State,[string,string]>={off:['',''],idle:['DROP VIDEO','OR CLICK TO SELECT'],'drag-over':['RELEASE TO PLAY',''],loading:['LOADING...',''],playing:['',''],paused:['PAUSE',''],ended:['REPLAY','CLICK TO PLAY AGAIN'],exporting:['RECORDING',''],complete:['COMPLETE','CLICK TO PLAY AGAIN'],error:['NO SIGNAL','TRY ANOTHER FILE']};
     [osd.textContent,sub.textContent]=labels[next];sub.hidden=!labels[next][1];
     save.hidden=!session || !['paused','ended','complete'].includes(next);
-    cancel.hidden=next!=='exporting';cancel.disabled=false;
+    cancel.hidden=!['exporting','loading'].includes(next);cancel.disabled=false;
     progress.hidden=next!=='exporting';
     screen.disabled=next==='loading'||next==='exporting';
     screen.setAttribute('aria-label',next==='playing'?'Pause processed video':session&&next!=='error'?'Play processed video':'Choose a local video file');
+    if(session&&!session.metadata.hasAudio&&session.metadata.warnings.length&&['playing','paused','ended','complete'].includes(next)) {sub.textContent='NO AUDIO · SILENT OUTPUT';sub.hidden=false;}
+  }
+  function showError(error:unknown,prefix:string) {
+    const problem=error as {message?:string;osd?:string;hint?:string};
+    setState('error');osd.textContent=problem.osd??'VIDEO ERROR';sub.textContent=problem.hint??'RETRY OR CONVERT TO MP4';sub.hidden=false;
+    statusText(`${prefix}: ${problem.message??String(error)}`);
   }
   async function clearDownload() {
     const previous=download;download=null;if(!previous) return;
@@ -42,7 +48,13 @@ if(page) {
       if(token!==generation) return;
       if(!file.type.startsWith('video/')&&!/\.(mp4|m4v|mov|webm|ogv|mkv)$/i.test(file.name)) throw new Error('Choose a video file such as MP4, MOV or WebM.');
       runtime=await loadCRT();if(token!==generation) return;
-      const loaded=await runtime.CRTSession.open(file,canvas,{signal:loadController.signal});
+      const signal=AbortSignal.any([loadController.signal,AbortSignal.timeout(120_000)]);
+      const loaded=await runtime.CRTSession.open(file,canvas,{signal,onDiagnostic:event=>{
+        if(token!==generation)return;
+        window.dispatchEvent(new CustomEvent('watch:diagnostic',{detail:event}));
+        const labels:Record<string,string>={container:'READING FILE', 'video-capability':'CHECKING VIDEO','first-frame':'DECODING VIDEO','audio-selection':'CHECKING AUDIO',indexing:'INDEXING',wasm:'STARTING CRT'};
+        if(labels[event.stage]) {sub.textContent=labels[event.stage]+(event.fraction!==undefined?` ${Math.floor(event.fraction*100)}%`:'');sub.hidden=false;statusText(sub.textContent+'. Processing stays on your computer. CANCEL to stop.');}
+      }});
       if(token!==generation) {await loaded.destroy();return;}
       session=loaded;
       const meta=loaded.metadata, crop=getWatchCrop43(meta.width,meta.height);
@@ -55,16 +67,18 @@ if(page) {
       loaded.addEventListener('statechange',refresh);loaded.addEventListener('frame',refresh);
       loaded.addEventListener('error',(event)=>{
         if(session!==loaded||saving) return;
-        setState('error');statusText(`Playback stopped: ${(event as ErrorEvent).message}. Choose another file.`);
+        showError((event as ErrorEvent).error??(event as ErrorEvent).message,'Playback stopped');
       });
       setState('paused');
-      statusText(`Processed video ready${meta.hasAudio?' with sound':''}. Click the television to pause or resume.`);
+      statusText(`Processed video ready${meta.hasAudio?' with sound':''}. ${meta.warnings.join(' ')} Click the television to pause or resume.`);
       try {await loaded.play();if(token===generation) refresh();}
       catch {if(token===generation) {setState('paused');statusText('Video loaded. Click the television to start sound and playback.');}}
     } catch(error) {
       if(token!==generation) return;
       const failed=session;session=null;await failed?.destroy();
-      setState('error');statusText(`Unable to open this video. ${error instanceof Error?error.message:String(error)}`);
+      if(error instanceof DOMException&&error.name==='AbortError'){setState('idle');statusText('Opening cancelled. Choose another local video.');}
+      else if(error instanceof DOMException&&error.name==='TimeoutError')showError({message:'Opening exceeded two minutes. Cancelled locally; retry or convert the input to H.264/AAC MP4.',osd:'OPEN TIMED OUT'},'Unable to open video');
+      else showError(error,'Unable to open video');
     }
   }
   async function toggle() {
@@ -104,7 +118,7 @@ if(page) {
         const anchor=document.createElement('a');anchor.href=url;anchor.download=filename;anchor.hidden=true;document.body.append(anchor);anchor.click();anchor.remove();
         download={url,remove,timer:window.setTimeout(()=>void clearDownload(),60_000)};temporary=null;
       }
-      setState('complete');statusText('Your processed video with sound has been saved. Click the television to replay.');
+      setState('complete');statusText(`Your processed video${current.metadata.hasAudio?' with sound':' without audio'} has been saved. Click the television to replay.`);
       window.dispatchEvent(new CustomEvent('watch:export-complete'));
     } catch(error) {
       if(token!==generation) return;
@@ -119,7 +133,7 @@ if(page) {
   for(let i=0;i<24;i++) segments.append(document.createElement('span'));
   screen.addEventListener('click',()=>void toggle());
   save.addEventListener('click',()=>void saveVideo());
-  cancel.addEventListener('click',()=>{cancelRequested=true;cancel.disabled=true;sub.textContent='CANCELLING';sub.hidden=false;void session?.cancelExport();});
+  cancel.addEventListener('click',()=>{cancel.disabled=true;sub.textContent='CANCELLING';sub.hidden=false;if(state==='loading'){loadController?.abort();return;}cancelRequested=true;void session?.cancelExport();});
   input.addEventListener('change',()=>{const file=input.files?.[0];if(file)input.dataset.filename=file.name.replace(/\.[^.]+$/,'').replace(/[^\w-]+/g,'-').slice(0,80);void loadFile(file);input.value='';});
   const containsFiles=(event:DragEvent)=>Array.from(event.dataTransfer?.types??[]).includes('Files');
   stage.addEventListener('dragenter',event=>{if(!containsFiles(event))return;event.preventDefault();if(saving)return;if(++depth===1){beforeDrag=state;setState('drag-over');}});

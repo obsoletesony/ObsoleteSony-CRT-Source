@@ -6,15 +6,17 @@ import {wasmModulePromise} from './upstream/ntsc-rs-module';
 import {clipSeed,profiles,settingsAt,stateAt,validatePreset,UPSTREAM} from './profiles';
 import {indexFrames,frameIndexAt} from './frame-index';
 import {getWatchCrop43} from './crop';
+import {WrappedInput} from './upstream/still-image-media';
+import {inspectStage,type OpenOptions} from './diagnostics';
 
 export {getWatchCrop43,profiles,stateAt,validatePreset,UPSTREAM};
-export const VERSION='1.0.0';
+export const VERSION='1.0.1';
 export type ExportProgress={processedSeconds:number;duration:number;fraction:number;phase:'rendering'|'finalizing'|'complete'};
 export class CRTSession extends EventTarget {
     readonly player: MediaPlayer;
     readonly file: File;
     readonly seed: number;
-    readonly metadata: {width:number;height:number;duration:number;crop:ReturnType<typeof getWatchCrop43>;hasAudio:boolean;frameCount:number};
+    readonly metadata: {width:number;height:number;duration:number;crop:ReturnType<typeof getWatchCrop43>;hasAudio:boolean;frameCount:number;firstTimestamp:number;audioTrackId:number|null;warnings:string[]};
     private pool: EffectWorkerPool;
     private settings;
     private job: RenderJob|null=null;
@@ -22,34 +24,40 @@ export class CRTSession extends EventTarget {
     private constructor(file:File,player:MediaPlayer,pool:EffectWorkerPool,seed:number,frameCount:number) {
         super(); this.file=file; this.player=player; this.pool=pool; this.seed=seed;
         this.settings={resizeHeight:480,resizeFilter:ResizeFilter.Bilinear,effectEnabled:true,effectSettings:profiles.stable,outputRect:null};
-        this.metadata={width:player.width,height:player.height,duration:player.duration!,crop:getWatchCrop43(player.width,player.height),hasAudio:player.hasAudio,frameCount};
+        this.metadata={width:player.width,height:player.height,duration:player.duration!,crop:getWatchCrop43(player.width,player.height),hasAudio:player.hasAudio,frameCount,firstTimestamp:player.input.firstTimestamp,audioTrackId:player.input.audioSelection.track?.id??null,warnings:player.input.audioSelection.warnings};
         player.addEventListener('statechange',()=>{this.dispatchEvent(new Event('statechange'));});
         player.addEventListener('frame',()=>{this.dispatchEvent(new Event('frame'));});
         player.addEventListener('error',(event:ErrorEvent)=>{this.dispatchEvent(new ErrorEvent('error',{error:event.error,message:event.message}));});
     }
-    static async open(file:File,canvas:HTMLCanvasElement,options:{signal?:AbortSignal;wear?:boolean;concurrency?:number}={}) {
+    static async open(file:File,canvas:HTMLCanvasElement,options:OpenOptions&{wear?:boolean;concurrency?:number}={}) {
         if(!('VideoDecoder' in window) || !('VideoEncoder' in window) || !('AudioContext' in window)) throw new Error('This browser cannot process video locally. Please use current Chrome or Edge.');
         if(!file.size) throw new Error('The selected file is empty.');
-        const [seed,timestamps]=await Promise.all([clipSeed(file),indexFrames(file,options.signal)]);
-        options.signal?.throwIfAborted();
-        await wasmModulePromise;
+        // Probe codecs and real samples BEFORE paying the whole-file canonical-index cost.
+        const input=await WrappedInput.create(file,{...options,calculateFrameRate:true,stillImageFrameRate:30});
+        let pool:EffectWorkerPool|null=null,player:MediaPlayer|null=null;
+        try {
+        const seed=await clipSeed(file);
+        const timestamps=await inspectStage(options,'indexing',()=>indexFrames(file,options.signal,(frames,timestamp)=>options.onDiagnostic?.({stage:'indexing',state:'progress',elapsedMs:0,frames,fraction:Math.max(0,Math.min(.99,timestamp/(input.duration??Infinity)))})));
+        await inspectStage(options,'wasm',async()=>{await wasmModulePromise;});
         const native=new NtscSettingsList();
         try { for(const profile of Object.values(profiles)) native.parsePreset(JSON.stringify(profile)); } finally {native.free();}
-        const pool=await EffectWorkerPool.create(options.concurrency);
-        let player:MediaPlayer|null=null;
-        try {
+        pool=await EffectWorkerPool.create(options.concurrency);
+        options.signal?.throwIfAborted();
             pool.resolveFrame=timestampUs=>{
                 const frameNum=frameIndexAt(timestamps,timestampUs);
                 return {frameNum,effectSettings:settingsAt(timestamps[frameNum]/1e6,frameNum,seed,options.wear!==false)};
             };
-            player=await MediaPlayer.create(file,Promise.resolve(pool),{resizeHeight:480,resizeFilter:ResizeFilter.Bilinear,effectEnabled:true,effectSettings:profiles.stable,outputRect:null},30);
+            player=await MediaPlayer.create(file,Promise.resolve(pool),{resizeHeight:480,resizeFilter:ResizeFilter.Bilinear,effectEnabled:true,effectSettings:profiles.stable,outputRect:null},30,input);
             if(!Number.isFinite(player.duration) || player.duration!<=0) throw new Error('The video has an invalid duration.');
             options.signal?.throwIfAborted();
             const session=new CRTSession(file,player,pool,seed,timestamps.length);
             player.canvas=canvas;
             await player.seek(0);
+            options.signal?.throwIfAborted();
+            input.finishOpening();
+            options.onDiagnostic?.({stage:'ready',state:'done',elapsedMs:0,details:session.metadata});
             return session;
-        } catch(error) {player?.destroy();pool.destroy();throw error;}
+        } catch(error) {player?.destroy();input.close();pool?.destroy();options.signal?.throwIfAborted();throw error;}
     }
     get state() {return this.player.state;}
     get timestamp() {return this.player.timestamp;}
@@ -62,7 +70,7 @@ export class CRTSession extends EventTarget {
         if(this.closed || this.job) throw new Error('The converter is unavailable or already recording.');
         if(!(await supportedCodecsForVideo).has('avc')) throw new Error('H.264 export is unavailable in this browser. Please try Chrome or Edge.');
         this.pause();
-        const job=this.job=new RenderJob(this.file,this.file.name,destination,Promise.resolve(this.pool),{videoCodec:'avc',videoBitrate:4_000_000,effectSettings:this.settings,stillImageFrameRate:30,stillImageDuration:0},isTemporary);
+        const job=this.job=new RenderJob(this.file,this.file.name,destination,Promise.resolve(this.pool),{videoCodec:'avc',videoBitrate:4_000_000,effectSettings:this.settings,stillImageFrameRate:30,stillImageDuration:0,audioTrackId:this.metadata.audioTrackId},isTemporary);
         progress({fraction:0,processedSeconds:0,duration:this.metadata.duration,phase:'rendering'});
         let processedSeconds=0;
         job.addEventListener('progress',(event:ProgressEvent)=>{processedSeconds=event.loaded;progress({processedSeconds,duration:event.total,fraction:Math.min(.99,event.loaded/event.total),phase:'rendering'});});

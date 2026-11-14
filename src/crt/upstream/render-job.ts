@@ -28,6 +28,7 @@ export type RenderJobSettings = {
     effectSettings: PipelineSettings,
     stillImageFrameRate: number,
     stillImageDuration: number,
+    audioTrackId?:number|null,
 };
 
 export type RenderJobState =
@@ -93,6 +94,8 @@ export default class RenderJob extends TypedEventTarget<ProgressEvent | StateCha
         const inputPromise = WrappedInput.create(source, {
             stillImageFrameRate: settings.stillImageFrameRate,
             stillImageDuration: settings.stillImageDuration,
+            audioTrackId:settings.audioTrackId,
+            signal:this.abortController.signal,
         });
         this.input = inputPromise;
 
@@ -169,7 +172,7 @@ export default class RenderJob extends TypedEventTarget<ProgressEvent | StateCha
                         (audioTrack.codec === 'opus' || audioTrack.codec === 'vorbis')
                     )
                 ) {
-                    // We can pass through some audio codecs
+                    // MP4 edit lists preserve negative audio preroll without dropping packets.
                     audioSource = new EncodedAudioPacketSource(audioTrack.codec);
                     audioEncoders.push(async() => {
                         const audioSink = new EncodedPacketSink(audioTrack);
@@ -178,9 +181,6 @@ export default class RenderJob extends TypedEventTarget<ProgressEvent | StateCha
                         };
                         for await (const audioPacket of audioSink.packets()) {
                             if (signal.aborted) break;
-                            // Some videos can have audio that starts before timestamp 0. Mediabunny errors out when
-                            // muxing these, so drop them.
-                            if (audioPacket.timestamp < 0) continue;
                             await (audioSource as EncodedAudioPacketSource).add(audioPacket, config);
                             if (signal.aborted) break;
                         }
@@ -198,14 +198,21 @@ export default class RenderJob extends TypedEventTarget<ProgressEvent | StateCha
                     audioSource = new AudioSampleSource(sourceSettings);
                     audioEncoders.push(async() => {
                         const audioSink = new AudioSampleSink(audioTrack);
-                        for await (const sample of audioSink.samples()) {
+                        for await (let sample of audioSink.samples()) {
                             if (signal.aborted) {
                                 sample.close();
                                 break;
                             }
                             if (sample.timestamp < 0) {
+                                const skipFrames = Math.min(sample.numberOfFrames,
+                                    Math.ceil(-sample.timestamp * sample.sampleRate));
+                                if (skipFrames === sample.numberOfFrames) {
+                                    sample.close();
+                                    continue;
+                                }
+                                const trimmed = sample.trim(skipFrames);
                                 sample.close();
-                                continue;
+                                sample = trimmed;
                             }
                             try {
                                 await (audioSource as AudioSampleSource).add(sample);
@@ -280,10 +287,11 @@ export default class RenderJob extends TypedEventTarget<ProgressEvent | StateCha
                 await completionPromise();
             } catch (error) {
                 const cancelled = signal.aborted && signal.reason?.name === 'AbortError';
+                const failure = cancelled ? signal.reason : error;
                 this.abortController.abort(error);
                 await this.output?.cancel().catch(()=>{});
-                this.changeState(cancelled ? {state:'cancelled',reason:error} : {state:'error',error});
-                throw error;
+                this.changeState(cancelled ? {state:'cancelled',reason:failure} : {state:'error',error});
+                throw failure;
             } finally {
                 await inputPromise.then(input=>input.close(),()=>{});
             }

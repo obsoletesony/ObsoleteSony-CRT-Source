@@ -4,3 +4,6 @@
 [submodule "valadaptive-lib"]
 	path = valadaptive-lib
 	url = https://github.com/valadaptive/valadaptive-lib
+[submodule "third_party/ac3/FFmpeg"]
+	path = third_party/ac3/FFmpeg
+	url = https://github.com/FFmpeg/FFmpeg

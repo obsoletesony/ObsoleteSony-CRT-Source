@@ -4,7 +4,7 @@ export default defineConfig({
     base:'./',
     worker:{format:'es'},
     build:{
-        outDir:'package/crt-1.0.0',
+        outDir:'package/crt-1.0.1',
         emptyOutDir:true,
         target:'es2022',
         assetsInlineLimit:0,

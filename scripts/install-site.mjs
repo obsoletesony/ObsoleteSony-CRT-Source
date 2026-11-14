@@ -3,13 +3,13 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 const site=path.resolve(process.argv[2] ?? '../website');
 await fs.access(path.join(site,'src/pages/watch.astro'));
-const source=path.resolve(import.meta.dirname,'../package/crt-1.0.0');
+const source=path.resolve(import.meta.dirname,'../package/crt-1.0.1');
 const manifest=JSON.parse(await fs.readFile(path.join(source,'manifest.json'),'utf8'));
 for(const [file,info] of Object.entries(manifest.artifacts)) {
     const hash=createHash('sha256').update(await fs.readFile(path.join(source,file))).digest('hex');
     if(hash!==info.sha256) throw new Error(`Corrupt runtime artifact: ${file}`);
 }
-const dest=path.join(site,'public/vendor/crt/1.0.0');
+const dest=path.join(site,'public/vendor/crt/1.0.1');
 try {
     const old=JSON.parse(await fs.readFile(path.join(dest,'manifest.json'),'utf8'));
     for(const [file,info] of Object.entries(old.artifacts)) if(!manifest.artifacts[file]) {

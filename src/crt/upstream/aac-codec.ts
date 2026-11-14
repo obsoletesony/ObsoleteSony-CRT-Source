@@ -66,7 +66,10 @@ class AACEncoder extends CustomAudioEncoder {
         assertInit(avcodec && encoder);
 
         if (this.currentTimestamp === null) {
-            this.currentTimestamp = audioSample.timestamp;
+            // This pinned FFmpeg AAC-LC encoder has initial_padding == frame_size
+            // (aacenc.c at bf1b838, lines 1164-1165). Keep its priming packet and
+            // mark the delay; the MP4 edit list excludes preroll from presentation.
+            this.currentTimestamp = audioSample.timestamp - this.frameSize / this.config.sampleRate;
         }
 
         if (
