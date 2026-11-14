@@ -19,26 +19,25 @@ import "../styles/watch.css";
   hideFooter={false}
   mainClass="watch-main"
 >
-  <section class="watch-page" data-watch-app data-state="off" aria-labelledby="watch-title">
+  <section class="watch-page" data-watch-app data-state="off" data-assets-ready="false" aria-labelledby="watch-title">
     <div class="watch-stage" id="watch-stage">
+      <div class="watch-art-loader" role="status" aria-live="polite">
+        <span class="watch-art-spinner" aria-hidden="true"></span>
+        <span class="watch-art-error" data-watch-art-error hidden>Unable to load the television. Reload the page.</span>
+        <span class="watch-screenreader-only" data-watch-art-loading>Loading television graphics.</span>
+      </div>
       <div class="watch-tv" id="watch-tv" role="group" aria-label="Sony Trinitron television video player">
         <img
           class="watch-tv__glass"
-          src="/images/watch/tv-glass.webp"
+          src="/images/watch/tv-glass-v2.webp"
           width="2048"
-          height="1970"
+          height="1524"
           alt=""
           aria-hidden="true"
           decoding="async"
         />
 
         <div class="watch-tv__screen" id="watch-screen">
-          <canvas
-            class="watch-tv__static"
-            width="320"
-            height="240"
-            aria-hidden="true"
-          ></canvas>
           <!-- A strict 4:3 picture window. Widescreen/portrait sources are
                center-cropped, not letterboxed or stretched. The bezel masks
                the screen's slight physical curvature separately. -->
@@ -52,7 +51,6 @@ import "../styles/watch.css";
             ></canvas>
           </div>
           <div class="watch-tv__scanlines" aria-hidden="true"></div>
-          <div class="watch-tv__power-flash" aria-hidden="true"></div>
 
           <div class="watch-osd">
             <div class="watch-osd__message" data-watch-osd>DROP VIDEO</div>
@@ -73,7 +71,7 @@ import "../styles/watch.css";
 
         <img
           class="watch-tv__cabinet"
-          src="/images/watch/tv-frame.webp"
+          src="/images/watch/tv-frame-v2.webp"
           width="2047"
           height="1901"
           alt="1990s Sony Trinitron television"
