@@ -395,6 +395,9 @@ main.watch-main {
 .watch-transport__button:disabled { opacity: .3; cursor: default; }
 .watch-transport__play { font-size: 18px; min-width: 25px; }
 .watch-transport__time { font-variant-numeric: tabular-nums; font-size: 12px; white-space: nowrap; }
+.watch-transport__mute { font-size: 11px; min-width: 29px; }
+.watch-transport__volume { width: 64px; min-width: 40px; accent-color: #a1e9bb; cursor: pointer; }
+.watch-transport__volume:disabled { opacity: .3; cursor: default; }
 .watch-transport__spacer { flex: 1; }
 .watch-transport__button[aria-pressed="true"] { color: #a1e9bb; }
 .watch-transport__save { font-size: 11px; letter-spacing: .055em; white-space: nowrap; }
@@ -426,6 +429,8 @@ main.watch-main {
 @media (max-width: 650px) {
   .watch-transport { width: 80%; margin-top: 7px; font-size: 12px; }
   .watch-transport__row { gap: 7px; }
+  .watch-transport__volume { display: none; }
+  .watch-transport__mute { font-size: 10px; min-width: 28px; }
   .watch-transport__button { padding: 3px 1px; }
   .watch-transport__time { font-size: 10px; }
   .watch-transport__save { font-size: 10px; }
