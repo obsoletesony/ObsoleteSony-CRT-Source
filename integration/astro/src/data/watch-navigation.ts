@@ -7,7 +7,6 @@ export const watchNavigation = {
   links: [
     { label: "How to Use", href: "/watch/how-to-use" },
     { label: "Compatibility", href: "/watch/compatibility" },
-    { label: "Report a Bug", href: "/watch/report-a-bug" },
     { label: "About", href: "/watch/about" },
     {
       label: "GitHub",

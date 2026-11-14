@@ -85,14 +85,14 @@ import "../styles/watch.css";
       </div>
     </div>
 
-    <div class="watch-transport" data-watch-transport hidden aria-label="Video playback controls">
+    <div class="watch-transport" data-watch-transport aria-label="Video playback controls">
       <div class="watch-transport__seek">
         <input id="watch-seek" type="range" min="0" max="1000" step="1" value="0"
-          aria-label="Seek through video" />
+          aria-label="Seek through video" disabled />
       </div>
       <div class="watch-transport__row">
         <button class="watch-transport__button watch-transport__play" type="button"
-          data-watch-play data-playing="true" aria-label="Pause" title="Pause">
+          data-watch-play data-playing="false" aria-label="Play" title="Play" disabled>
           <svg class="watch-transport__icon watch-transport__icon--play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
             <path d="M8 5.5v13l10-6.5z" />
           </svg>
@@ -103,18 +103,18 @@ import "../styles/watch.css";
         </button>
         <span class="watch-transport__time" data-watch-time>0:00 / 0:00</span>
         <button class="watch-transport__button watch-transport__mute" type="button"
-          data-watch-mute aria-label="Mute audio" title="Mute or unmute">VOL</button>
+          data-watch-mute aria-label="Mute audio" title="Mute or unmute" disabled>VOL</button>
         <input class="watch-transport__volume" data-watch-volume type="range" min="0" max="100" step="1" value="100"
-          aria-label="Playback volume" />
+          aria-label="Playback volume" disabled />
         <span class="watch-transport__spacer"></span>
         <button class="watch-transport__button" type="button" data-watch-caption-toggle
-          aria-label="Load subtitles" title="Load an SRT or VTT subtitle file">CC</button>
+          aria-label="Load subtitles" title="Load an SRT or VTT subtitle file" disabled>CC</button>
         <select class="watch-transport__captions-select" data-watch-caption-track
           aria-label="Subtitle track" title="Select embedded or external subtitles" hidden></select>
         <button class="watch-transport__button" type="button" data-watch-fullscreen
-          aria-label="Enter fullscreen" title="Fullscreen">⛶</button>
+          aria-label="Enter fullscreen" title="Fullscreen" disabled>⛶</button>
         <button class="watch-transport__button watch-transport__save" type="button"
-          data-watch-save aria-label="Download processed video" title="Download processed video">
+          data-watch-save aria-label="Download processed video" title="Download processed video" disabled>
           <svg class="watch-transport__icon" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" stroke-linecap="round"
             stroke-linejoin="round" aria-hidden="true" focusable="false">

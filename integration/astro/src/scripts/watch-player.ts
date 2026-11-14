@@ -12,7 +12,6 @@ if(page) {
   const osd=element('[data-watch-osd]'), sub=element('[data-watch-subosd]'), status=element('#watch-status');
   const progress=element('[data-watch-progress]'), segments=element('[data-watch-segments]');
   const save=element<HTMLButtonElement>('[data-watch-save]'), cancel=element<HTMLButtonElement>('[data-watch-cancel]');
-  const transport=element<HTMLElement>('[data-watch-transport]');
   const playButton=element<HTMLButtonElement>('[data-watch-play]');
   const seek=element<HTMLInputElement>('#watch-seek');
   const timeLabel=element<HTMLElement>('[data-watch-time]');
@@ -53,6 +52,10 @@ if(page) {
     mute.textContent=current>0?'VOL':'MUTE';
     mute.setAttribute('aria-label',current>0?'Mute audio':'Unmute audio');
   }
+  function setSeekProgress(time:number,duration:number) {
+    const percent=duration>0&&Number.isFinite(duration) ? 100*Math.min(1,Math.max(0,time/duration)) : 0;
+    seek.style.setProperty('--watch-seek-percent',percent.toFixed(2)+'%');
+  }
   function updateTransport() {
     const current=session;
     if(!current)return;
@@ -60,6 +63,7 @@ if(page) {
     const time=Math.max(0,Math.min(duration,current.timestamp));
     if(!scrubbing) {
       seek.value=String(Math.round(time/Math.max(duration,.001)*1000));
+      setSeekProgress(time,duration);
       timeLabel.textContent=timecode(time)+' / '+timecode(duration);
       updateCaptions(time);
     }
@@ -109,8 +113,6 @@ if(page) {
     state=next;page!.dataset.state=next;
     const labels:Record<State,[string,string]>={off:['',''],idle:['DROP VIDEO','OR CLICK TO SELECT'],'drag-over':['RELEASE TO PLAY',''],loading:['LOADING...',''],playing:['',''],paused:['',''],ended:['REPLAY','CLICK TO PLAY AGAIN'],exporting:['RECORDING',''],complete:['COMPLETE','CLICK TO PLAY AGAIN'],error:['NO SIGNAL','TRY ANOTHER FILE']};
     [osd.textContent,sub.textContent]=labels[next];sub.hidden=!labels[next][1];
-    save.hidden=!session || ['off','idle','drag-over','loading','error','exporting'].includes(next);
-    transport.hidden=!session || ['off','idle','drag-over','loading','error'].includes(next);
     seek.disabled=!session || next==='exporting';
     playButton.disabled=!session || next==='exporting';
     captionsButton.disabled=!session || next==='exporting';
@@ -118,6 +120,14 @@ if(page) {
     mute.disabled=!session || !session.metadata.hasAudio || next==='exporting';
     volume.disabled=!session || !session.metadata.hasAudio || next==='exporting';
     save.disabled=!session || next==='exporting';
+    if(!session) {
+      seek.value='0';
+      setSeekProgress(0,0);
+      timeLabel.textContent='0:00 / 0:00';
+      playButton.dataset.playing='false';
+      playButton.title='Play';
+      playButton.setAttribute('aria-label','Play');
+    }
     if(['loading','error','idle','off'].includes(next)) captions.textContent='';
     cancel.hidden=!['exporting','loading'].includes(next);cancel.disabled=false;
     progress.hidden=next!=='exporting';
@@ -256,6 +266,7 @@ if(page) {
     scrubbing=true;
     const time=session.metadata.duration*Number(seek.value)/1000;
     timeLabel.textContent=timecode(time)+' / '+timecode(session.metadata.duration);
+    setSeekProgress(time,session.metadata.duration);
     updateCaptions(time);
   });
   seek.addEventListener('change',()=>{
