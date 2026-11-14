@@ -110,7 +110,14 @@ import "../styles/watch.css";
         <button class="watch-transport__button" type="button" data-watch-fullscreen
           aria-label="Enter fullscreen" title="Fullscreen">⛶</button>
         <button class="watch-transport__button watch-transport__save" type="button"
-          data-watch-save aria-label="Save processed video">SAVE VIDEO</button>
+          data-watch-save aria-label="Download processed video" title="Download processed video">
+          <svg class="watch-transport__icon" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <path d="M12 3v12m-5-5 5 5 5-5" />
+            <path d="M5 17v3h14v-3" />
+          </svg>
+        </button>
       </div>
       <input class="watch-file-input" type="file" id="watch-captions-file" accept=".srt,.vtt,text/vtt"
         aria-label="Choose an SRT or VTT subtitle file" tabindex="-1" />
