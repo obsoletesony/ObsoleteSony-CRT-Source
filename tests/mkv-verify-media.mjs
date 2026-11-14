@@ -2,7 +2,7 @@ import {spawnSync} from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import assert from 'node:assert/strict';
-const root=path.resolve(import.meta.dirname,'../..'),out=path.join(root,'mkv-evidence');
+const root=path.resolve(import.meta.dirname,'../..'),out=path.resolve(process.env.CRT_EVIDENCE??path.join(root,'mkv-evidence'));
 const ffprobe=process.env.FFPROBE??path.join(root,'tools/ffprobe/node_modules/ffprobe-static/bin/win32/x64/ffprobe.exe');
 const ffmpeg=process.env.FFMPEG??path.join(root,'tools/imageio/imageio_ffmpeg/binaries/ffmpeg-win-x86_64-v9.0.2.exe');
 function run(exe,args){const p=spawnSync(exe,args,{windowsHide:true,maxBuffer:8*1024*1024});if(p.status!==0)throw new Error(String(p.stderr));return p.stdout;}

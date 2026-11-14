@@ -20,7 +20,9 @@ for(const name of ['chrome','edge']){
  const file=path.join(out,`${name}-original-processed.mp4`),meta=metadata(file),video=meta.streams.find(s=>s.codec_type==='video'),audio=meta.streams.find(s=>s.codec_type==='audio');
  assert.equal(video.codec_name,'h264');assert.equal(video.width,640);assert.equal(video.height,480);assert.equal(video.sample_aspect_ratio,'1:1');assert.equal(Number(video.nb_frames),31087);
  assert.equal(audio.codec_name,'aac');assert.equal(audio.channels,2);assert.equal(Number(audio.sample_rate),48000);assert(Math.abs(Number(meta.format.duration)-Number(input.format.duration))<.08);
+ run(ffmpeg,['-v','error','-xerror','-i',file,'-map','0:v:0','-map','0:a:0','-f','null','-']);
  const result={browser:name,video:{codec:video.codec_name,width:video.width,height:video.height,frames:Number(video.nb_frames),rate:video.avg_frame_rate},audio:{codec:audio.codec_name,channels:audio.channels,sampleRate:audio.sample_rate},duration:Number(meta.format.duration),bytes:Number(meta.format.size),sync:[],playback:[]};
+ result.fullDecodePassed=true;
  for(const second of [60,600,1280]){
   const x=pcm(source,second),y=pcm(file,second);let best={correlation:-Infinity,lag:Infinity,gain:0};
   for(let lag=-2048;lag<=2048;lag++){let xx=0,yy=0,xy=0;for(let i=Math.max(0,-lag);i<Math.min(x.length,y.length-lag);i+=8){xx+=x[i]*x[i];yy+=y[i+lag]*y[i+lag];xy+=x[i]*y[i+lag];}const correlation=xy/Math.sqrt(xx*yy);if(correlation>best.correlation)best={correlation,lag,gain:xy/xx};}
