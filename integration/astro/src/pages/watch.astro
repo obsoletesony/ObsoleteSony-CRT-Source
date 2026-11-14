@@ -1,5 +1,6 @@
 ---
-import SiteLayout from "../layouts/SiteLayout.astro";
+import BooksLayout from "../layouts/BooksLayout.astro";
+import { watchNavigation } from "../data/watch-navigation";
 import "../styles/watch.css";
 
 /*
@@ -12,13 +13,16 @@ import "../styles/watch.css";
  */
 ---
 
-<SiteLayout
+<BooksLayout
   title="ObsoleteSony CRT | A VHS Video Experiment"
   description="Drop a video into a vintage Sony Trinitron. A free browser-based ObsoleteSony experiment inspired by the look of VHS."
   indexable={false}
-  hideFooter={false}
-  mainClass="watch-main"
+  bodyClass="watch-theme"
+  themeColor="#0b0b0b"
+  sectionNavigation={watchNavigation}
+  showSectionAnnouncement={false}
 >
+  <main class="watch-main">
   <section class="watch-page" data-watch-app data-state="off" data-assets-ready="false" aria-labelledby="watch-title">
     <div class="watch-stage" id="watch-stage">
       <div class="watch-art-loader" role="status" aria-live="polite">
@@ -88,7 +92,15 @@ import "../styles/watch.css";
       </div>
       <div class="watch-transport__row">
         <button class="watch-transport__button watch-transport__play" type="button"
-          data-watch-play aria-label="Pause" title="Play or pause">Ⅱ</button>
+          data-watch-play data-playing="true" aria-label="Pause" title="Pause">
+          <svg class="watch-transport__icon watch-transport__icon--play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+            <path d="M8 5.5v13l10-6.5z" />
+          </svg>
+          <svg class="watch-transport__icon watch-transport__icon--pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+            <rect x="6" y="5" width="4" height="14" rx="1" />
+            <rect x="14" y="5" width="4" height="14" rx="1" />
+          </svg>
+        </button>
         <span class="watch-transport__time" data-watch-time>0:00 / 0:00</span>
         <button class="watch-transport__button watch-transport__mute" type="button"
           data-watch-mute aria-label="Mute audio" title="Mute or unmute">VOL</button>
@@ -97,10 +109,19 @@ import "../styles/watch.css";
         <span class="watch-transport__spacer"></span>
         <button class="watch-transport__button" type="button" data-watch-caption-toggle
           aria-label="Load subtitles" title="Load an SRT or VTT subtitle file">CC</button>
+        <select class="watch-transport__captions-select" data-watch-caption-track
+          aria-label="Subtitle track" title="Select embedded or external subtitles" hidden></select>
         <button class="watch-transport__button" type="button" data-watch-fullscreen
           aria-label="Enter fullscreen" title="Fullscreen">⛶</button>
         <button class="watch-transport__button watch-transport__save" type="button"
-          data-watch-save aria-label="Save processed video">SAVE VIDEO</button>
+          data-watch-save aria-label="Download processed video" title="Download processed video">
+          <svg class="watch-transport__icon" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <path d="M12 3v12m-5-5 5 5 5-5" />
+            <path d="M5 17v3h14v-3" />
+          </svg>
+        </button>
       </div>
       <input class="watch-file-input" type="file" id="watch-captions-file" accept=".srt,.vtt,text/vtt"
         aria-label="Choose an SRT or VTT subtitle file" tabindex="-1" />
@@ -119,9 +140,9 @@ import "../styles/watch.css";
       aria-label="Select a local video"
       tabindex="-1"
     />
-    <a class="watch-source-link" href="https://github.com/obsoletesony/ObsoleteSony-CRT-Source" target="_blank" rel="noopener noreferrer">Source</a>
   </section>
-</SiteLayout>
+  </main>
+</BooksLayout>
 
 <script>
   import "../scripts/watch.ts";

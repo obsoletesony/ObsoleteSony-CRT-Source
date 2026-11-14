@@ -1,6 +1,7 @@
 import {getWatchCrop43,WATCH_VIDEO_ASPECT_RATIO} from '../lib/watchCrop43';
 import {loadCRT,type CRTSession,type CRTRuntime,type CRTProgress} from '../lib/crt';
 import {parseWatchCaptions,captionAt,type WatchCue} from './watch-subtitles';
+import {readEmbeddedWatchCaptions,type EmbeddedWatchTrack} from './watch-embedded-subtitles';
 
 type State='off'|'idle'|'drag-over'|'loading'|'playing'|'paused'|'ended'|'exporting'|'complete'|'error';
 const page=document.querySelector<HTMLElement>('[data-watch-app]');
@@ -18,6 +19,7 @@ if(page) {
   const captions=element<HTMLElement>('[data-watch-captions]');
   const captionsButton=element<HTMLButtonElement>('[data-watch-caption-toggle]');
   const captionsFile=element<HTMLInputElement>('#watch-captions-file');
+  const captionsSelect=element<HTMLSelectElement>('[data-watch-caption-track]');
   const fullscreen=element<HTMLButtonElement>('[data-watch-fullscreen]');
   const mute=element<HTMLButtonElement>('[data-watch-mute]');
   const volume=element<HTMLInputElement>('[data-watch-volume]');
@@ -26,6 +28,9 @@ if(page) {
   let state:State='off', beforeDrag:State='idle', depth=0;
   let saving=false, cancelRequested=false;
   let subtitleCues:WatchCue[]=[];
+  let externalCues:WatchCue[]=[];
+  let embeddedTracks:EmbeddedWatchTrack[]=[];
+  let activeCaptionKey='';
   let subtitlesEnabled=false;
   let scrubbing=false;
   let lastAudibleVolume=1;
@@ -58,19 +63,51 @@ if(page) {
       timeLabel.textContent=timecode(time)+' / '+timecode(duration);
       updateCaptions(time);
     }
-    playButton.textContent=current.state==='playing'?'Ⅱ':'▶';
+    playButton.dataset.playing=String(current.state==='playing');
+    playButton.title=current.state==='playing'?'Pause':'Play';
     playButton.setAttribute('aria-label',current.state==='playing'?'Pause':'Play');
     syncVolume();
   }
   function syncCaptionButton() {
+    const available=embeddedTracks.length>0||externalCues.length>0;
     captionsButton.setAttribute('aria-pressed',String(subtitlesEnabled&&subtitleCues.length>0));
-    captionsButton.setAttribute('aria-label',subtitleCues.length?(subtitlesEnabled?'Hide subtitles':'Show subtitles'):'Load subtitles');
-    captionsButton.title=subtitleCues.length?'Toggle subtitles (Shift-click to replace file)':'Load SRT/VTT subtitles';
+    captionsButton.setAttribute('aria-label',available?(subtitlesEnabled?'Hide subtitles':'Show subtitles'):'Load subtitles');
+    captionsButton.title=available?'Toggle subtitles (Shift-click to load SRT/VTT)':'Load SRT/VTT subtitles';
+  }
+  function redrawCaptionTracks() {
+    const option=(value:string,label:string)=>new Option(label,value);
+    const available=embeddedTracks.length>0||externalCues.length>0;
+    captionsSelect.replaceChildren(option('off','Off'));
+    for(const track of embeddedTracks) {
+      captionsSelect.add(option('embedded:'+track.id,track.label.slice(0,64)));
+    }
+    if(externalCues.length)captionsSelect.add(option('external','External SRT/VTT'));
+    captionsSelect.add(option('load','Load SRT/VTT...'));
+    captionsSelect.hidden=!available;
+    captionsSelect.value=subtitlesEnabled?activeCaptionKey:'off';
+  }
+  function selectCaptions(key:string) {
+    if(key==='off') {
+      subtitlesEnabled=false;
+    } else if(key==='external'&&externalCues.length) {
+      activeCaptionKey=key;
+      subtitleCues=externalCues;
+      subtitlesEnabled=true;
+    } else {
+      const track=embeddedTracks.find(item=>key==='embedded:'+item.id);
+      if(!track)return;
+      activeCaptionKey=key;
+      subtitleCues=track.cues;
+      subtitlesEnabled=true;
+    }
+    redrawCaptionTracks();
+    syncCaptionButton();
+    updateCaptions(session?.timestamp??0);
   }
 
   function setState(next:State) {
     state=next;page!.dataset.state=next;
-    const labels:Record<State,[string,string]>={off:['',''],idle:['DROP VIDEO','OR CLICK TO SELECT'],'drag-over':['RELEASE TO PLAY',''],loading:['LOADING...',''],playing:['',''],paused:['PAUSE',''],ended:['REPLAY','CLICK TO PLAY AGAIN'],exporting:['RECORDING',''],complete:['COMPLETE','CLICK TO PLAY AGAIN'],error:['NO SIGNAL','TRY ANOTHER FILE']};
+    const labels:Record<State,[string,string]>={off:['',''],idle:['DROP VIDEO','OR CLICK TO SELECT'],'drag-over':['RELEASE TO PLAY',''],loading:['LOADING...',''],playing:['',''],paused:['',''],ended:['REPLAY','CLICK TO PLAY AGAIN'],exporting:['RECORDING',''],complete:['COMPLETE','CLICK TO PLAY AGAIN'],error:['NO SIGNAL','TRY ANOTHER FILE']};
     [osd.textContent,sub.textContent]=labels[next];sub.hidden=!labels[next][1];
     save.hidden=!session || ['off','idle','drag-over','loading','error','exporting'].includes(next);
     transport.hidden=!session || ['off','idle','drag-over','loading','error'].includes(next);
@@ -101,7 +138,9 @@ if(page) {
     if(!file) return;
     const token=++generation;loadController?.abort();loadController=new AbortController();
     const previous=session;session=null;
-    subtitleCues=[];subtitlesEnabled=false;syncCaptionButton();captionsFile.value='';
+    subtitleCues=[];externalCues=[];embeddedTracks=[];
+    activeCaptionKey='';subtitlesEnabled=false;
+    redrawCaptionTracks();syncCaptionButton();captionsFile.value='';
     scrubbing=false;seekGeneration++;
     setState('loading');statusText(`Opening ${file.name} on your computer.`);
     window.dispatchEvent(new CustomEvent('watch:source-selected',{detail:{file}}));
@@ -119,6 +158,22 @@ if(page) {
       }});
       if(token!==generation) {await loaded.destroy();return;}
       session=loaded;
+      // Embedded Matroska text tracks are optional and load without blocking playback.
+      void readEmbeddedWatchCaptions(file,loadController.signal).then(tracks=>{
+        if(token!==generation||session!==loaded)return;
+        embeddedTracks=tracks;
+        if(tracks.length && !externalCues.length) {
+          const selected=tracks.find(track=>track.isDefault)??tracks[0];
+          selectCaptions('embedded:'+selected.id);
+        } else {
+          redrawCaptionTracks();syncCaptionButton();
+        }
+        updateTransport();
+      }).catch(error=>{
+        if(token===generation&&session===loaded&&!(error instanceof DOMException&&error.name==='AbortError')) {
+          console.warn('Embedded subtitles could not be read:',error);
+        }
+      });
       const meta=loaded.metadata, crop=getWatchCrop43(meta.width,meta.height);
       if(JSON.stringify(crop)!==JSON.stringify(meta.crop)) throw new Error('Video crop does not match the TV framing.');
       window.dispatchEvent(new CustomEvent('watch:video-ready',{detail:{file,sourceWidth:meta.width,sourceHeight:meta.height,aspectRatio:WATCH_VIDEO_ASPECT_RATIO,crop}}));
@@ -220,8 +275,20 @@ if(page) {
     })();
   });
   captionsButton.addEventListener('click',event=>{
-    if(event.shiftKey||!subtitleCues.length){captionsFile.click();return;}
-    subtitlesEnabled=!subtitlesEnabled;syncCaptionButton();updateTransport();
+    if(event.shiftKey||(!embeddedTracks.length&&!externalCues.length)){
+      captionsFile.click();return;
+    }
+    subtitlesEnabled=!subtitlesEnabled;
+    redrawCaptionTracks();syncCaptionButton();updateTransport();
+  });
+  captionsSelect.addEventListener('change',()=>{
+    const key=captionsSelect.value;
+    if(key==='load') {
+      captionsFile.click();
+      redrawCaptionTracks();
+      return;
+    }
+    selectCaptions(key);
   });
   captionsFile.addEventListener('change',()=>{
     const file=captionsFile.files?.[0];captionsFile.value='';
@@ -232,7 +299,7 @@ if(page) {
       }
       const parsed=parseWatchCaptions(await file.text());
       if(!parsed.length){statusText('No readable subtitle cues found.');return;}
-      subtitleCues=parsed;subtitlesEnabled=true;syncCaptionButton();updateTransport();
+      externalCues=parsed;selectCaptions('external');updateTransport();
       statusText('Loaded '+subtitleCues.length+' subtitle cues from '+file.name+'. Captions are preview-only, not included in the exported MP4.');
     })().catch(error=>statusText('Could not load subtitles: '+String(error)));
   });
@@ -259,7 +326,7 @@ if(page) {
     fullscreen.setAttribute('aria-label',active?'Exit fullscreen':'Enter fullscreen');
     fullscreen.title=active?'Exit fullscreen':'Fullscreen';
   },{signal:uiAbort.signal});
-  syncCaptionButton();
+  redrawCaptionTracks();syncCaptionButton();
   screen.addEventListener('click',()=>void toggle());
   save.addEventListener('click',()=>void saveVideo());
   cancel.addEventListener('click',()=>{cancel.disabled=true;sub.textContent='CANCELLING';sub.hidden=false;if(state==='loading'){loadController?.abort();return;}cancelRequested=true;void session?.cancelExport();});
